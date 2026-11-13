@@ -1,0 +1,343 @@
+"""Property tests for PolarProjector mathematical invariants.
+
+Deterministic seeded sweeps (numpy + stdlib only): repeatable execution for
+fixed inputs in a fixed floating-point environment (lambda stays bounded, and
+the orthogonal residual satisfies the triangle inequality).
+
+Dimensions/seed counts are declarative @pytest.mark.parametrize (not
+hardcoded loops). L2 normalization makes the invariant geometry invariant
+to d; the small dimension set only guards shape/index parity.
+"""
+import numpy as np
+import pytest
+
+from polar_projector import PolarProjector
+
+DIMS = (128, 384, 768)
+DIMS_LIGHT = (128, 384)
+P_DIMS = pytest.mark.parametrize("d", DIMS)
+P_DIMS_LIGHT = pytest.mark.parametrize("d", DIMS_LIGHT)
+P_SEED_25 = pytest.mark.parametrize("seed", range(25))
+P_SEED_20 = pytest.mark.parametrize("seed", range(20))
+
+# Multiplier over ||v_dipole|| that drives the residual into the saturated
+# band: v_n = c_1 + K·v̂_dipole ⇒ r = K·v̂_dipole ⇒ λ* = K / ||v_dipole||.
+# K = 2 forces λ* = 2 > 1 deterministically, past the clamp.
+_SATURATION_DRIVE = 2.0
+
+
+def _random_unit_vectors(d: int, seed: int, n: int = 4) -> list:
+    rng = np.random.default_rng(seed)
+    vecs = []
+    for _ in range(n):
+        v = rng.normal(size=d).astype(np.float64)
+        vecs.append(v / np.linalg.norm(v))
+    return vecs
+
+
+def _recompute_internals(
+    projector: PolarProjector,
+    v_n: np.ndarray,
+    c_1: np.ndarray,
+    c_A: np.ndarray,
+    c_B: np.ndarray,
+    lambda_val: float,
+    d_esc: float,
+) -> dict:
+    """Reconstruct intermediate quantities from the project() pipeline."""
+    c1_hat = projector._normalize_anchor(c_1)
+    cA_perp = projector._project_perp(c_A, c1_hat)
+    cB_perp = projector._project_perp(c_B, c1_hat)
+    v_dipole = projector._compute_dipole(cA_perp, cB_perp, c1_hat)
+    r = projector._project_perp(v_n - c_1, c1_hat)
+    v_dipole_norm_sq = float(np.dot(v_dipole, v_dipole))
+    if v_dipole_norm_sq > 0:
+        lambda_raw = float(np.dot(r, v_dipole) / v_dipole_norm_sq)
+    else:
+        lambda_raw = 0.0
+    return {
+        "c1_hat": c1_hat,
+        "v_dipole": v_dipole,
+        "r": r,
+        "lambda_raw": lambda_raw,
+        "v_dipole_norm_sq": v_dipole_norm_sq,
+    }
+
+
+class TestPolarProjectorProperties:
+    """Property tests for mathematical invariants."""
+
+    def test_polar_projector_deterministic_all_dims(self):
+        """Repeatability: same inputs in the same environment produce identical outputs."""
+        for d in (384, 768, 1536):
+            for seed in range(20):
+                v_n, c_1, c_A, c_B = _random_unit_vectors(d, seed)
+                projector = PolarProjector()
+                r1 = projector.project(v_n, c_1, c_A, c_B, 1)
+                r2 = projector.project(v_n, c_1, c_A, c_B, 1)
+                assert r1 == r2  # Exact tuple equality (bitwise)
+
+    def test_lambda_bounded_for_random_unit_vectors(self):
+        """lambda in [-1, 1] for all random unit vectors."""
+        for d in (384, 768):
+            for seed in range(20):
+                v_n, c_1, c_A, c_B = _random_unit_vectors(d, seed)
+                projector = PolarProjector()
+                _, lambda_val, _ = projector.project(v_n, c_1, c_A, c_B, 1)
+                assert -1.0 <= lambda_val <= 1.0
+
+    def test_escape_distance_nonnegative_for_random_vectors(self):
+        """d_esc >= 0 for all random unit vectors."""
+        for d in (384, 768):
+            for seed in range(20):
+                v_n, c_1, c_A, c_B = _random_unit_vectors(d, seed)
+                projector = PolarProjector()
+                _, _, d_esc = projector.project(v_n, c_1, c_A, c_B, 1)
+                assert d_esc >= 0.0
+
+    def test_escape_distance_triangle_inequality(self):
+        """d_esc <= ||r|| + |lambda| * ||v_dipole||."""
+        for d in (384, 768):
+            for seed in range(20):
+                v_n, c_1, c_A, c_B = _random_unit_vectors(d, seed)
+                projector = PolarProjector()
+                _, lambda_val, d_esc = projector.project(v_n, c_1, c_A, c_B, 1)
+
+                # Recompute internal values for verification
+                c1_norm = np.linalg.norm(c_1)
+                c1_hat = c_1 / c1_norm if c1_norm > projector.eps_norm else np.zeros_like(c_1)
+                P_perp = np.eye(d) - np.outer(c1_hat, c1_hat)
+                cA_perp = P_perp @ c_A
+                cB_perp = P_perp @ c_B
+                dipole_diff = cA_perp - cB_perp
+
+                if np.linalg.norm(dipole_diff) < projector.eps_collinear:
+                    u_perp = projector._canonical_u_perp(c1_hat)
+                    v_dipole = 2.0 * projector.delta * u_perp
+                else:
+                    v_dipole = dipole_diff
+
+                r = P_perp @ (v_n - c_1)
+                bound = np.linalg.norm(r) + abs(lambda_val) * np.linalg.norm(v_dipole)
+                assert d_esc <= bound + 1e-10  # Numerical tolerance
+
+    def test_centroid_id_preserved(self):
+        """Centroid ID passed through unchanged."""
+        for d in (384, 768):
+            for seed in range(10):
+                v_n, c_1, c_A, c_B = _random_unit_vectors(d, seed)
+                projector = PolarProjector()
+                for centroid_id in (0, 1, 42, 255, 65536, 1000000):
+                    result = projector.project(v_n, c_1, c_A, c_B, centroid_id)
+                    assert result[0] == centroid_id
+
+    def test_outputs_finite(self):
+        """All outputs must be finite (no NaN/inf)."""
+        for d in (384, 768):
+            for seed in range(10):
+                v_n, c_1, c_A, c_B = _random_unit_vectors(d, seed)
+                projector = PolarProjector()
+                _, lambda_val, d_esc = projector.project(v_n, c_1, c_A, c_B, 1)
+                assert np.isfinite(lambda_val)
+                assert np.isfinite(d_esc)
+
+    @P_DIMS
+    @P_SEED_25
+    def test_energy_conservation_pythagorean(self, d, seed):
+        """Paper §4: ||r||² = λ²||v_dipole||² + d_esc² when |λ*| ≤ 1."""
+        v_n, c_1, c_A, c_B = _random_unit_vectors(d, seed)
+        projector = PolarProjector()
+        _, lambda_val, d_esc = projector.project(v_n, c_1, c_A, c_B, 1)
+        internals = _recompute_internals(
+            projector, v_n, c_1, c_A, c_B, lambda_val, d_esc,
+        )
+        if abs(internals["lambda_raw"]) <= 1.0:
+            norm_r_sq = float(np.dot(internals["r"], internals["r"]))
+            lambda_sq_vd_sq = lambda_val**2 * internals["v_dipole_norm_sq"]
+            energy_gap = abs(norm_r_sq - lambda_sq_vd_sq - d_esc**2)
+            assert energy_gap < 1e-10, (
+                f"seed={seed} d={d}: |‖r‖² - λ²‖v‖² - d_esc²| = {energy_gap}"
+            )
+
+    def _saturated_case(
+        self,
+        projector: PolarProjector,
+        d: int,
+        seed: int,
+    ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray] | None:
+        """Build (v_n, c_1, c_A, c_B) forcing |λ*| > 1 past the clamp."""
+        rng = np.random.default_rng(seed)
+        c_1 = rng.normal(size=d).astype(np.float64)
+        c_1 = c_1 / np.linalg.norm(c_1)
+        c_A = rng.normal(size=d).astype(np.float64)
+        c_A = c_A / np.linalg.norm(c_A)
+        c_B = rng.normal(size=d).astype(np.float64)
+        c_B = c_B / np.linalg.norm(c_B)
+        internals_pre = _recompute_internals(
+            projector, c_1, c_1, c_A, c_B, 0.0, 0.0,
+        )
+        vd = internals_pre["v_dipole"]
+        vd_norm = np.linalg.norm(vd)
+        if vd_norm < projector.eps_collinear:
+            return None
+        vd_hat = vd / vd_norm
+        drive = _SATURATION_DRIVE * vd_norm
+        v_n = c_1 + drive * vd_hat
+        return v_n, c_1, c_A, c_B
+
+    @P_DIMS_LIGHT
+    @P_SEED_25
+    def test_energy_inequality_under_saturation(self, d, seed):
+        """Paper §4: when |λ*| > 1 (clamped), ||r||² > λ²||v_dipole||² + d_esc²."""
+        projector = PolarProjector()
+        case = self._saturated_case(projector, d, seed)
+        if case is None:
+            return
+        v_n, c_1, c_A, c_B = case
+        _, lambda_val, d_esc = projector.project(v_n, c_1, c_A, c_B, 1)
+        internals = _recompute_internals(
+            projector, v_n, c_1, c_A, c_B, lambda_val, d_esc,
+        )
+        assert abs(internals["lambda_raw"]) > 1.0, "drive failed to saturate"
+        assert abs(lambda_val) == 1.0, "Clamping failed"
+        norm_r_sq = float(np.dot(internals["r"], internals["r"]))
+        energy_sum = lambda_val**2 * internals["v_dipole_norm_sq"] + d_esc**2
+        assert norm_r_sq > energy_sum + 1e-10, (
+            f"seed={seed}: expected strict inequality under saturation"
+        )
+
+    @P_DIMS
+    @P_SEED_25
+    def test_residual_orthogonal_to_v_dipole(self, d, seed):
+        """⟨r - λ·v_dipole, v_dipole⟩ = 0 when λ is unclamped (least-squares)."""
+        v_n, c_1, c_A, c_B = _random_unit_vectors(d, seed)
+        projector = PolarProjector()
+        _, lambda_val, d_esc = projector.project(v_n, c_1, c_A, c_B, 1)
+        internals = _recompute_internals(
+            projector, v_n, c_1, c_A, c_B, lambda_val, d_esc,
+        )
+        if abs(internals["lambda_raw"]) <= 1.0:
+            residual = internals["r"] - lambda_val * internals["v_dipole"]
+            dot_product = abs(float(np.dot(residual, internals["v_dipole"])))
+            assert dot_product < 1e-10, (
+                f"seed={seed} d={d}: ⟨r-λv, v⟩ = {dot_product}"
+            )
+
+    @P_DIMS
+    @P_SEED_25
+    def test_residual_orthogonal_to_anchor(self, d, seed):
+        """⟨r, ĉ₁⟩ = 0 for all outputs of project()."""
+        v_n, c_1, c_A, c_B = _random_unit_vectors(d, seed)
+        projector = PolarProjector()
+        _, lambda_val, d_esc = projector.project(v_n, c_1, c_A, c_B, 1)
+        internals = _recompute_internals(
+            projector, v_n, c_1, c_A, c_B, lambda_val, d_esc,
+        )
+        dot_product = abs(float(np.dot(internals["r"], internals["c1_hat"])))
+        assert dot_product < 1e-10, (
+            f"seed={seed} d={d}: ⟨r, ĉ₁⟩ = {dot_product}"
+        )
+
+    @P_DIMS
+    @P_SEED_20
+    def test_lambda_sign_matches_dipole_orientation(self, d, seed):
+        """Stimulus along +ĉ_dipole → λ > 0; along −ĉ_dipole → λ < 0."""
+        rng = np.random.default_rng(seed)
+        c_1 = rng.normal(size=d).astype(np.float64)
+        c_1 = c_1 / np.linalg.norm(c_1)
+        c_A = rng.normal(size=d).astype(np.float64)
+        c_A = c_A / np.linalg.norm(c_A)
+        c_B = rng.normal(size=d).astype(np.float64)
+        c_B = c_B / np.linalg.norm(c_B)
+        projector = PolarProjector()
+        internals = _recompute_internals(
+            projector, c_1, c_1, c_A, c_B, 0.0, 0.0,
+        )
+        vd = internals["v_dipole"]
+        if np.linalg.norm(vd) < projector.eps_collinear:
+            return
+        vd_hat = vd / np.linalg.norm(vd)
+        # v_n = c_1 ± drive·v̂ keeps r = ±drive·v̂ exactly in the dipole axis
+        drive = _SATURATION_DRIVE * np.linalg.norm(vd)
+        v_plus = c_1 + drive * vd_hat
+        v_minus = c_1 - drive * vd_hat
+        _, lam_plus, _ = projector.project(v_plus, c_1, c_A, c_B, 1)
+        _, lam_minus, _ = projector.project(v_minus, c_1, c_A, c_B, 1)
+        assert lam_plus > 0.0, f"seed={seed}: λ along +dipole should be positive, got {lam_plus}"
+        assert lam_minus < 0.0, f"seed={seed}: λ along -dipole should be negative, got {lam_minus}"
+
+    @staticmethod
+    def _mixed_saturation_stimuli(projector, d, seed, n):
+        """A frame and n stimuli spread along its dipole so that some saturate and some do not."""
+        rng = np.random.default_rng(seed)
+        frame = projector.prepare(*(rng.normal(size=d) for _ in range(3)))
+        dipole_norm = float(np.sqrt(frame.v_dipole_norm_sq))
+        v_hat = frame.v_dipole / dipole_norm
+        along = rng.uniform(-2.5, 2.5, size=n) * dipole_norm
+        stimuli = frame.c_1 + rng.normal(size=(n, d)) * 0.3 + np.outer(along, v_hat)
+        return frame, dipole_norm, stimuli
+
+    @P_DIMS_LIGHT
+    @P_SEED_20
+    def test_isometric_view_contracts_pairwise_distances(self, d, seed):
+        """Paper §2.1: with λ in multiples of ||v_dipole||, screen distance <= ||r_i - r_j||, saturated included."""
+        projector = PolarProjector()
+        frame, dipole_norm, stimuli = self._mixed_saturation_stimuli(projector, d, seed, 120)
+        view, residuals, saturated = [], [], []
+        for i, v in enumerate(stimuli):
+            _, lam, d_esc = projector.evaluate(v, frame, i)
+            view.append((lam * dipole_norm, d_esc))
+            residuals.append(projector._project_perp(v - frame.c_1, frame.c1_hat))
+            saturated.append(abs(lam) == 1.0)
+        assert any(saturated) and not all(saturated), "the sweep must mix saturated and unsaturated stimuli"
+        view_arr, residual_arr = np.array(view), np.array(residuals)
+        i, j = np.triu_indices(len(stimuli), k=1)
+        screen = np.linalg.norm(view_arr[i] - view_arr[j], axis=1)
+        true = np.linalg.norm(residual_arr[i] - residual_arr[j], axis=1)
+        assert np.all(screen <= true * (1.0 + 1e-12) + 1e-12), (
+            f"seed={seed} d={d}: max screen/true ratio {float(np.max(screen / true))}"
+        )
+
+    @P_DIMS_LIGHT
+    @P_SEED_20
+    def test_escape_distance_is_distance_to_dipole_segment(self, d, seed):
+        """Paper §2.1: d_esc = min over t in [-1, 1] of ||r - t·v_dipole||, saturated or not."""
+        projector = PolarProjector()
+        frame, dipole_norm, stimuli = self._mixed_saturation_stimuli(projector, d, seed, 12)
+        grid = np.linspace(-1.0, 1.0, 20_001)
+        step = float(grid[1] - grid[0])
+        for i, v in enumerate(stimuli):
+            _, _, d_esc = projector.evaluate(v, frame, i)
+            r = projector._project_perp(v - frame.c_1, frame.c1_hat)
+            rr, rv = float(np.dot(r, r)), float(np.dot(r, frame.v_dipole))
+            # Well-conditioned stimuli, so the expanded square is accurate enough for a grid search.
+            nearest = float(np.sqrt(max(np.min(rr - 2.0 * grid * rv + grid**2 * frame.v_dipole_norm_sq), 0.0)))
+            tolerance = 1e-9 * (1.0 + np.sqrt(rr))
+            assert d_esc <= nearest + tolerance, f"seed={seed} d={d}: d_esc {d_esc} above segment distance {nearest}"
+            assert nearest - d_esc <= step * dipole_norm + tolerance, (
+                f"seed={seed} d={d}: d_esc {d_esc} below segment distance {nearest}"
+            )
+
+    @P_DIMS_LIGHT
+    @P_SEED_20
+    def test_reanchored_residual_norm_folds_past_a_right_angle(self, d, seed):
+        """Paper §2.1: with c_1 = q on a unit-normalized corpus, ||r|| = sin(theta) folds past 90 degrees."""
+        rng = np.random.default_rng(seed)
+        q = rng.normal(size=d)
+        q /= np.linalg.norm(q)
+        w = rng.normal(size=d)
+        w -= np.dot(w, q) * q
+        w /= np.linalg.norm(w)
+        projector = PolarProjector()
+        c1_hat = projector._normalize_anchor(q)
+        norms = {}
+        for theta_deg in (10.0, 45.0, 90.0, 135.0, 170.0, 180.0):
+            theta = np.radians(theta_deg)
+            v = np.cos(theta) * q + np.sin(theta) * w
+            r = projector._project_perp(v - q, c1_hat)
+            norms[theta_deg] = np.linalg.norm(r)
+            assert norms[theta_deg] == pytest.approx(np.sin(theta), abs=1e-9), (
+                f"seed={seed} d={d} theta={theta_deg}: ||r||={norms[theta_deg]}, sin(theta)={np.sin(theta)}"
+            )
+        assert norms[170.0] < norms[90.0], "the residual norm must fold back down past a right angle"
+        assert norms[180.0] < 1e-9, "a diametrically opposite stimulus must land on the anchor"
