@@ -1,0 +1,18 @@
+{
+  "schema": "actuarii-config/1",
+  "governed_paths": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    ".claude/**",
+    ".mcp.json",
+    "tools/**",
+    "hand-check/**",
+    "protocol/**"
+  ],
+  "python_script_dirs": [
+    "."
+  ],
+  "contract_registry": null,
+  "review": null,
+  "receipt_window_seconds": 900
+}
