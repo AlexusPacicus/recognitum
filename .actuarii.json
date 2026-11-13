@@ -13,6 +13,20 @@
     "."
   ],
   "contract_registry": null,
-  "review": null,
+  "review": {
+    "procedure": ".claude/skills/blind-review/SKILL.md",
+    "base_docs": [
+      "protocol/definitions.md"
+    ],
+    "records": "protocol",
+    "denied": [
+      "BLUEPRINT.md",
+      "results/",
+      "redteam/",
+      "hand-check/",
+      "reviews/",
+      "report/"
+    ]
+  },
   "receipt_window_seconds": 900
 }
