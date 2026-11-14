@@ -586,3 +586,8 @@ Notes for the author, who writes it.
 - 2026-11-13: blind review of the instrument added, with the kit's reviewer: phase 1 before the
   freeze, phase 2 before the campaign if the matrix is ready by 18:00. The protocol moves to
   `protocol/`, and the predictions leave it for their own file.
+- 2026-11-14: the sprint started a day late, and what was run is the frozen protocol, not the fuller
+  plan above. The matrix and the hand check were not built or run; the matrix is kept as a
+  specification with its predictions in `design/matrix`. The second detector is the count check.
+  The red team is run by the author in another model's chat. The questions are the three of
+  `protocol/PROTOCOL.md`, not the three of this blueprint. The text above is left as it was.
