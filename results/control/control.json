@@ -1,0 +1,1368 @@
+{
+ "code_commit": "0e445a2eeb89e3afaf530078b0f970451b109251",
+ "case_hash": "0e109781f03f83c62608be876048c2234feaac088299a229abfff59b2faaa8e4",
+ "verifier_runs": [
+  {
+   "exit": 0,
+   "blocked": false,
+   "by": "",
+   "s": 2.377,
+   "verdict": "Verdict: ALL PASS"
+  },
+  {
+   "exit": 0,
+   "blocked": false,
+   "by": "",
+   "s": 2.349,
+   "verdict": "Verdict: ALL PASS"
+  },
+  {
+   "exit": 0,
+   "blocked": false,
+   "by": "",
+   "s": 2.364,
+   "verdict": "Verdict: ALL PASS"
+  }
+ ],
+ "verifier_t": 2.364,
+ "control_passes": true,
+ "N": 50,
+ "places": 472,
+ "figure_places": 419,
+ "short_places": 51,
+ "m2_every_place": true,
+ "published_strings": [
+  "+0.182",
+  "-0.818",
+  "0",
+  "0.000",
+  "0.0000",
+  "0.003",
+  "0.0068",
+  "0.019",
+  "0.02",
+  "0.023",
+  "0.03",
+  "0.033",
+  "0.053",
+  "0.056",
+  "0.1",
+  "0.13",
+  "0.133",
+  "0.17",
+  "0.22",
+  "0.23",
+  "0.25",
+  "0.26",
+  "0.267",
+  "0.2984",
+  "0.31",
+  "0.313",
+  "0.344",
+  "0.463",
+  "0.467",
+  "0.485",
+  "0.511",
+  "0.533",
+  "0.543",
+  "0.5535",
+  "0.567",
+  "0.6",
+  "0.61",
+  "0.6138",
+  "0.6208",
+  "0.6235",
+  "0.628",
+  "0.647",
+  "0.6593",
+  "0.66",
+  "0.6623",
+  "0.6639",
+  "0.6664",
+  "0.6666",
+  "0.68",
+  "0.6811",
+  "0.6858",
+  "0.6863",
+  "0.69",
+  "0.6950",
+  "0.6966",
+  "0.6968",
+  "0.70",
+  "0.7029",
+  "0.7730",
+  "0.8144",
+  "0.857",
+  "0.867",
+  "0.88",
+  "0.9",
+  "0.9049",
+  "0.9197",
+  "0.925",
+  "0.933",
+  "0.981",
+  "0.99",
+  "1",
+  "1.00",
+  "1.000",
+  "1.01",
+  "1.03",
+  "1.08",
+  "1.09",
+  "1.1",
+  "1.10",
+  "1.12",
+  "1.16",
+  "1.1606",
+  "1.17",
+  "1.18",
+  "1.21",
+  "1.2201",
+  "1.25",
+  "1.34",
+  "1.37",
+  "1.38",
+  "1.39",
+  "1.4",
+  "1.40",
+  "1.41",
+  "1.42",
+  "1.4273",
+  "1.45",
+  "1.46",
+  "1.47",
+  "1.48",
+  "1.5",
+  "1.5165",
+  "1.52",
+  "1.54",
+  "1.5471",
+  "1.55",
+  "1.56",
+  "1.57",
+  "1.59",
+  "1.62",
+  "1.64",
+  "1.6830",
+  "1.7",
+  "1.71",
+  "1.7258",
+  "1.8",
+  "1.86",
+  "1.91",
+  "10.1",
+  "10.88",
+  "11",
+  "11.39",
+  "11.86",
+  "11.9",
+  "12.03",
+  "12.04",
+  "12.05",
+  "12.18",
+  "12.20",
+  "12.46",
+  "12.50",
+  "12.54",
+  "12.6",
+  "12.62",
+  "12.75",
+  "15",
+  "16.4",
+  "18.8",
+  "2.0",
+  "2.05",
+  "2.12",
+  "2.28",
+  "2.41",
+  "2.46",
+  "2.47",
+  "2.62",
+  "2.7",
+  "21.52",
+  "229",
+  "24",
+  "24.9",
+  "240",
+  "28",
+  "29",
+  "296.20",
+  "3",
+  "3.2",
+  "3.34",
+  "3.37",
+  "3.42",
+  "3.5",
+  "3.54",
+  "3.8",
+  "3.81",
+  "3.86",
+  "328.17",
+  "3749",
+  "4.3",
+  "4.38",
+  "4.39",
+  "4.40",
+  "4.64",
+  "4.66",
+  "4.68",
+  "4.71",
+  "4.77",
+  "4.8",
+  "4.96",
+  "4.99",
+  "409",
+  "474",
+  "5",
+  "5.0",
+  "5.51",
+  "5.53",
+  "5.59",
+  "5.78",
+  "5.81",
+  "534",
+  "6.38",
+  "6.8",
+  "60.0",
+  "63.2",
+  "63.5",
+  "63.50",
+  "7",
+  "7.0",
+  "7.22",
+  "7.62",
+  "7.7",
+  "76.8",
+  "8.5",
+  "8.76",
+  "80",
+  "90",
+  "91"
+ ],
+ "checks": [
+  [
+   "§3  sweep N=1000 mean",
+   "11.86"
+  ],
+  [
+   "§3  sweep N=1000 p95",
+   "12.50"
+  ],
+  [
+   "§3  sweep N=2221 mean",
+   "12.05"
+  ],
+  [
+   "§3  sweep N=2221 p95",
+   "12.54"
+  ],
+  [
+   "§3  sweep N=4000 mean",
+   "12.04"
+  ],
+  [
+   "§3  sweep N=4000 p95",
+   "12.46"
+  ],
+  [
+   "§3  sweep N=25000 mean",
+   "12.18"
+  ],
+  [
+   "§3  sweep N=25000 p95",
+   "12.62"
+  ],
+  [
+   "§3.1 harness_null mean",
+   "0.13"
+  ],
+  [
+   "§3.1 harness_null p95",
+   "0.17"
+  ],
+  [
+   "§3.1 random_projection mean",
+   "1.08"
+  ],
+  [
+   "§3.1 random_projection p95",
+   "1.25"
+  ],
+  [
+   "§3.1 multi_anchor_cosine mean",
+   "1.21"
+  ],
+  [
+   "§3.1 multi_anchor_cosine p95",
+   "1.38"
+  ],
+  [
+   "§3.1 polar_evaluate mean",
+   "4.66"
+  ],
+  [
+   "§3.1 polar_evaluate p95",
+   "4.96"
+  ],
+  [
+   "§3.1 polar_project mean",
+   "12.20"
+  ],
+  [
+   "§3.1 polar_project p95",
+   "12.75"
+  ],
+  [
+   "§3.1 sliding_window_pca mean",
+   "296.20"
+  ],
+  [
+   "§3.1 sliding_window_pca p95",
+   "328.17"
+  ],
+  [
+   "§3.1 prepare() mean",
+   "7.22"
+  ],
+  [
+   "§3.1 prepare() p95",
+   "7.62"
+  ],
+  [
+   "§3.1 stateless (decompose)",
+   "12.03"
+  ],
+  [
+   "§3.1 frame share %",
+   "60.0"
+  ],
+  [
+   "§3.1 evaluate @N=25k",
+   "4.71"
+  ],
+  [
+   "§3.2 random_fixed median step",
+   "0.0000"
+  ],
+  [
+   "§3.2 random_fixed worst step",
+   "0.0000"
+  ],
+  [
+   "§3.2 random_fixed still steps",
+   "7"
+  ],
+  [
+   "§3.2 random_fixed trustworthiness",
+   "0.5535"
+  ],
+  [
+   "§3.2 pca_fit_once median step",
+   "0.0000"
+  ],
+  [
+   "§3.2 pca_fit_once worst step",
+   "0.0000"
+  ],
+  [
+   "§3.2 pca_fit_once still steps",
+   "7"
+  ],
+  [
+   "§3.2 pca_fit_once trustworthiness",
+   "0.6811"
+  ],
+  [
+   "§3.2 polar_fixed median step",
+   "0.0000"
+  ],
+  [
+   "§3.2 polar_fixed worst step",
+   "0.0000"
+  ],
+  [
+   "§3.2 polar_fixed still steps",
+   "7"
+  ],
+  [
+   "§3.2 polar_fixed trustworthiness",
+   "0.6639"
+  ],
+  [
+   "§3.2 polar_moving median step",
+   "0.2984"
+  ],
+  [
+   "§3.2 polar_moving worst step",
+   "0.6138"
+  ],
+  [
+   "§3.2 polar_moving still steps",
+   "0"
+  ],
+  [
+   "§3.2 polar_moving trustworthiness",
+   "0.6208"
+  ],
+  [
+   "§3.2 umap_fit_once median step",
+   "0.0000"
+  ],
+  [
+   "§3.2 umap_fit_once worst step",
+   "0.0000"
+  ],
+  [
+   "§3.2 umap_fit_once still steps",
+   "7"
+  ],
+  [
+   "§3.2 umap_fit_once trustworthiness",
+   "0.7730"
+  ],
+  [
+   "§3.2 umap_refit median step",
+   "1.1606"
+  ],
+  [
+   "§3.2 umap_refit worst step",
+   "1.5165"
+  ],
+  [
+   "§3.2 umap_refit still steps",
+   "0"
+  ],
+  [
+   "§3.2 umap_refit trustworthiness",
+   "0.9049"
+  ],
+  [
+   "§3.2 tsne_refit median step",
+   "1.2201"
+  ],
+  [
+   "§3.2 tsne_refit worst step",
+   "1.5471"
+  ],
+  [
+   "§3.2 tsne_refit still steps",
+   "0"
+  ],
+  [
+   "§3.2 tsne_refit trustworthiness",
+   "0.9197"
+  ],
+  [
+   "§3.3 random_fixed median lift",
+   "1.09"
+  ],
+  [
+   "§3.3 random_fixed final lift",
+   "1.10"
+  ],
+  [
+   "§3.3 random_fixed worst lift",
+   "0.99"
+  ],
+  [
+   "§3.3 pca_fit_once median lift",
+   "1.47"
+  ],
+  [
+   "§3.3 pca_fit_once final lift",
+   "1.48"
+  ],
+  [
+   "§3.3 pca_fit_once worst lift",
+   "1.01"
+  ],
+  [
+   "§3.3 polar_fixed median lift",
+   "1.57"
+  ],
+  [
+   "§3.3 polar_fixed final lift",
+   "1.59"
+  ],
+  [
+   "§3.3 polar_fixed worst lift",
+   "1.17"
+  ],
+  [
+   "§3.3 polar_moving median lift",
+   "1.39"
+  ],
+  [
+   "§3.3 polar_moving final lift",
+   "1.34"
+  ],
+  [
+   "§3.3 polar_moving worst lift",
+   "1.17"
+  ],
+  [
+   "§3.3 umap_fit_once median lift",
+   "1.55"
+  ],
+  [
+   "§3.3 umap_fit_once final lift",
+   "1.55"
+  ],
+  [
+   "§3.3 umap_fit_once worst lift",
+   "1.12"
+  ],
+  [
+   "§3.3 umap_refit median lift",
+   "2.05"
+  ],
+  [
+   "§3.3 umap_refit final lift",
+   "2.41"
+  ],
+  [
+   "§3.3 umap_refit worst lift",
+   "1.12"
+  ],
+  [
+   "§3.3 tsne_refit median lift",
+   "2.12"
+  ],
+  [
+   "§3.3 tsne_refit final lift",
+   "2.47"
+  ],
+  [
+   "§3.3 tsne_refit worst lift",
+   "1.10"
+  ],
+  [
+   "§3.4 farthest_neighbourhoods trust",
+   "0.6593"
+  ],
+  [
+   "§3.4 farthest_neighbourhoods median lift",
+   "1.42"
+  ],
+  [
+   "§3.4 farthest_neighbourhoods worst lift",
+   "1.03"
+  ],
+  [
+   "§3.4 largest_two_parts trust",
+   "0.6639"
+  ],
+  [
+   "§3.4 largest_two_parts median lift",
+   "1.57"
+  ],
+  [
+   "§3.4 largest_two_parts worst lift",
+   "1.17"
+  ],
+  [
+   "§3.4 kmeans2 trust",
+   "0.6858"
+  ],
+  [
+   "§3.4 kmeans2 median lift",
+   "1.46"
+  ],
+  [
+   "§3.4 kmeans2 worst lift",
+   "1.01"
+  ],
+  [
+   "§3.4 pc1_extremes trust",
+   "0.6966"
+  ],
+  [
+   "§3.4 pc1_extremes median lift",
+   "1.46"
+  ],
+  [
+   "§3.4 pc1_extremes worst lift",
+   "1.01"
+  ],
+  [
+   "§3.4 axis-sweep trust median",
+   "0.6950"
+  ],
+  [
+   "§3.4 axis-sweep trust min",
+   "0.6664"
+  ],
+  [
+   "§3.4 axis-sweep trust max",
+   "0.7029"
+  ],
+  [
+   "§3.4 axis-sweep lift median",
+   "1.6830"
+  ],
+  [
+   "§3.4 axis-sweep lift min",
+   "1.4273"
+  ],
+  [
+   "§3.4 axis-sweep lift max",
+   "1.7258"
+  ],
+  [
+   "§3.5 pca_global mean",
+   "0.056"
+  ],
+  [
+   "§3.5 pca_global median",
+   "0.033"
+  ],
+  [
+   "§3.5 pca_global min",
+   "0.000"
+  ],
+  [
+   "§3.5 pca_global max",
+   "0.267"
+  ],
+  [
+   "§3.5 polar_published mean",
+   "0.019"
+  ],
+  [
+   "§3.5 polar_published median",
+   "0.000"
+  ],
+  [
+   "§3.5 polar_published min",
+   "0.000"
+  ],
+  [
+   "§3.5 polar_published max",
+   "0.133"
+  ],
+  [
+   "§3.5 pca_local mean",
+   "0.023"
+  ],
+  [
+   "§3.5 pca_local median",
+   "0.000"
+  ],
+  [
+   "§3.5 pca_local min",
+   "0.000"
+  ],
+  [
+   "§3.5 pca_local max",
+   "0.533"
+  ],
+  [
+   "§3.5 polar_reanchored mean",
+   "0.543"
+  ],
+  [
+   "§3.5 polar_reanchored median",
+   "0.567"
+  ],
+  [
+   "§3.5 polar_reanchored min",
+   "0.133"
+  ],
+  [
+   "§3.5 polar_reanchored max",
+   "0.867"
+  ],
+  [
+   "§3.5 radial_plain mean",
+   "0.981"
+  ],
+  [
+   "§3.5 radial_plain median",
+   "1.000"
+  ],
+  [
+   "§3.5 radial_plain min",
+   "0.933"
+  ],
+  [
+   "§3.5 radial_plain max",
+   "1.000"
+  ],
+  [
+   "§3.5 ablation operator mean",
+   "0.543"
+  ],
+  [
+   "§3.5 ablation operator median",
+   "0.567"
+  ],
+  [
+   "§3.5 ablation unclamped mean",
+   "0.543"
+  ],
+  [
+   "§3.5 ablation unclamped median",
+   "0.567"
+  ],
+  [
+   "§3.5 ablation d_esc_only mean",
+   "0.485"
+  ],
+  [
+   "§3.5 ablation d_esc_only median",
+   "0.467"
+  ],
+  [
+   "§3.5 ablation residual_norm_only mean",
+   "1.000"
+  ],
+  [
+   "§3.5 ablation residual_norm_only median",
+   "1.000"
+  ],
+  [
+   "§3.5 ablation isometric mean",
+   "0.925"
+  ],
+  [
+   "§3.5 ablation isometric median",
+   "1.000"
+  ],
+  [
+   "§3.5 ablation x_scale=0.1",
+   "0.511"
+  ],
+  [
+   "§3.5 ablation x_scale=0.25",
+   "0.628"
+  ],
+  [
+   "§3.5 ablation x_scale=0.5",
+   "0.857"
+  ],
+  [
+   "§3.5 ablation x_scale=1.0",
+   "0.543"
+  ],
+  [
+   "§3.5 ablation x_scale=2.0",
+   "0.344"
+  ],
+  [
+   "§3.5 ablation dipole_norm_median",
+   "0.463"
+  ],
+  [
+   "§3.5 ablation dipole_norm_min",
+   "0.313"
+  ],
+  [
+   "§3.5 ablation dipole_norm_max",
+   "0.647"
+  ],
+  [
+   "§B  vector-form mean",
+   "4.64"
+  ],
+  [
+   "§B  scalar-form mean",
+   "3.34"
+  ],
+  [
+   "§B  scalar speedup",
+   "1.39"
+  ],
+  [
+   "§A  d=16 evaluate",
+   "3.81"
+  ],
+  [
+   "§A  d=16 floor",
+   "0.66"
+  ],
+  [
+   "§A  d=16 ratio",
+   "5.78"
+  ],
+  [
+   "§A  d=64 evaluate",
+   "3.86"
+  ],
+  [
+   "§A  d=64 floor",
+   "0.69"
+  ],
+  [
+   "§A  d=64 ratio",
+   "5.59"
+  ],
+  [
+   "§A  d=256 evaluate",
+   "4.38"
+  ],
+  [
+   "§A  d=256 floor",
+   "0.88"
+  ],
+  [
+   "§A  d=256 ratio",
+   "4.99"
+  ],
+  [
+   "§A  d=384 evaluate",
+   "4.40"
+  ],
+  [
+   "§A  d=384 floor",
+   "1.00"
+  ],
+  [
+   "§A  d=384 ratio",
+   "4.39"
+  ],
+  [
+   "§A  d=1024 evaluate",
+   "5.51"
+  ],
+  [
+   "§A  d=1024 floor",
+   "1.64"
+  ],
+  [
+   "§A  d=1024 ratio",
+   "3.37"
+  ],
+  [
+   "§A  d=4096 evaluate",
+   "10.88"
+  ],
+  [
+   "§A  d=4096 floor",
+   "4.77"
+  ],
+  [
+   "§A  d=4096 ratio",
+   "2.28"
+  ],
+  [
+   "§A  d=8192 evaluate",
+   "21.52"
+  ],
+  [
+   "§A  d=8192 floor",
+   "8.76"
+  ],
+  [
+   "§A  d=8192 ratio",
+   "2.46"
+  ],
+  [
+   "§A  sweep spread min % (d < 8192)",
+   "1.1"
+  ],
+  [
+   "§A  sweep spread max % (d < 8192)",
+   "3.2"
+  ],
+  [
+   "§A  sweep spread % at d=8192",
+   "16.4"
+  ],
+  [
+   "§A  cost at d=384 vs d=16",
+   "1.16"
+  ],
+  [
+   "§1  refit cost baselines min s",
+   "12.6"
+  ],
+  [
+   "§1  refit cost baselines max s",
+   "24.9"
+  ],
+  [
+   "§1  refit cost operator s",
+   "0.053"
+  ],
+  [
+   "§1  refit cost ratio min",
+   "240"
+  ],
+  [
+   "§1  refit cost ratio max",
+   "474"
+  ],
+  [
+   "§3.2 range tsne_refit min step",
+   "1.03"
+  ],
+  [
+   "§3.2 range tsne_refit max step",
+   "1.55"
+  ],
+  [
+   "§3.2 range umap_refit min step",
+   "0.31"
+  ],
+  [
+   "§3.2 range umap_refit max step",
+   "1.52"
+  ],
+  [
+   "§3.2 range polar_moving min step",
+   "0.13"
+  ],
+  [
+   "§3.2 range polar_moving max step",
+   "0.61"
+  ],
+  [
+   "§3.2 range umap_refit unaligned median",
+   "5.81"
+  ],
+  [
+   "§3.2 range umap_refit aligned median",
+   "1.16"
+  ],
+  [
+   "§B  undetectable 1e-11 scalar error mantissa",
+   "1.4"
+  ],
+  [
+   "§B  undetectable 1e-11 scalar error power",
+   "3"
+  ],
+  [
+   "§B  undetectable 1e-11 radicand negative",
+   "0"
+  ],
+  [
+   "§B  undetectable 1e-13 scalar error mantissa",
+   "1.4"
+  ],
+  [
+   "§B  undetectable 1e-13 scalar error power",
+   "5"
+  ],
+  [
+   "§B  undetectable 1e-13 radicand negative",
+   "0"
+  ],
+  [
+   "§3.2 E8 unit reproduces E1/E5/E6",
+   "1"
+  ],
+  [
+   "§3.2 isometric polar_fixed trustworthiness",
+   "0.6666"
+  ],
+  [
+   "§3.2 isometric polar_fixed still steps",
+   "7"
+  ],
+  [
+   "§3.2 isometric polar_fixed worst step",
+   "0.0000"
+  ],
+  [
+   "§3.2 isometric polar_moving trustworthiness",
+   "0.6235"
+  ],
+  [
+   "§3.2 isometric polar_moving worst step",
+   "0.8144"
+  ],
+  [
+   "§3.3 isometric polar_fixed median lift",
+   "1.59"
+  ],
+  [
+   "§3.3 isometric polar_fixed worst lift",
+   "1.17"
+  ],
+  [
+   "§3.3 isometric polar_moving median lift",
+   "1.41"
+  ],
+  [
+   "§3.3 isometric polar_moving worst lift",
+   "1.17"
+  ],
+  [
+   "§3.4 isometric largest_two_parts trust",
+   "0.6666"
+  ],
+  [
+   "§3.4 isometric largest_two_parts median lift",
+   "1.59"
+  ],
+  [
+   "§3.4 isometric largest_two_parts worst lift",
+   "1.17"
+  ],
+  [
+   "§3.4 isometric kmeans2 trust",
+   "0.6863"
+  ],
+  [
+   "§3.4 isometric kmeans2 median lift",
+   "1.46"
+  ],
+  [
+   "§3.4 isometric kmeans2 worst lift",
+   "1.01"
+  ],
+  [
+   "§3.4 isometric pc1_extremes trust",
+   "0.6968"
+  ],
+  [
+   "§3.4 isometric pc1_extremes median lift",
+   "1.45"
+  ],
+  [
+   "§3.4 isometric pc1_extremes worst lift",
+   "1.01"
+  ],
+  [
+   "§3.4 isometric farthest_neighbourhoods trust",
+   "0.6623"
+  ],
+  [
+   "§3.4 isometric farthest_neighbourhoods median lift",
+   "1.42"
+  ],
+  [
+   "§3.4 isometric farthest_neighbourhoods worst lift",
+   "1.03"
+  ],
+  [
+   "§3.4 F3 polar_fixed_vs_pca_fit_once changed",
+   "0"
+  ],
+  [
+   "§3.4 F3 polar_fixed_vs_random_fixed changed",
+   "0"
+  ],
+  [
+   "§3.4 F3 rules_by_median_lift changed",
+   "0"
+  ],
+  [
+   "§3.4 F3 rules_by_trustworthiness changed",
+   "0"
+  ],
+  [
+   "§3.4 F3 max trustworthiness shift",
+   "0.003"
+  ],
+  [
+   "§3.4 F3 max median-lift shift",
+   "0.02"
+  ],
+  [
+   "§2.1 saturation published frame %",
+   "11.39"
+  ],
+  [
+   "§2.1 saturation moving anchor min %",
+   "7.7"
+  ],
+  [
+   "§2.1 saturation moving anchor max %",
+   "18.8"
+  ],
+  [
+   "§A  clamp np.clip us",
+   "1.86"
+  ],
+  [
+   "§A  clamp min/max us",
+   "0.23"
+  ],
+  [
+   "§A  clamp share of old call %",
+   "29"
+  ],
+  [
+   "§A  clamp evaluate np.clip us",
+   "6.38"
+  ],
+  [
+   "§A  clamp evaluate min/max us",
+   "4.66"
+  ],
+  [
+   "§A  clamp evaluate speedup",
+   "1.37"
+  ],
+  [
+   "§A  clamp all stimuli bitwise equal",
+   "1"
+  ],
+  [
+   "§A  clamp all edge values bitwise equal",
+   "1"
+  ],
+  [
+   "§B  clamp scalar margin before",
+   "1.18"
+  ],
+  [
+   "§B  clamp removed from vector form us",
+   "1.7"
+  ],
+  [
+   "§B  clamp removed from scalar form us",
+   "2.0"
+  ],
+  [
+   "§B  clamp refusal share before %",
+   "15"
+  ],
+  [
+   "§B  clamp refusal share after %",
+   "28"
+  ],
+  [
+   "§2.1 poles lambda of pole A",
+   "+0.182"
+  ],
+  [
+   "§2.1 poles lambda of pole B",
+   "-0.818"
+  ],
+  [
+   "§2.1 poles window count of pole A's part",
+   "409"
+  ],
+  [
+   "§2.1 poles window count of pole B's part",
+   "91"
+  ],
+  [
+   "§2.1 poles two-part prediction exact to 1e-12",
+   "1"
+  ],
+  [
+   "§2.1 re-anchored saturation median %",
+   "0.68"
+  ],
+  [
+   "§3  sweep flatness %",
+   "2.7"
+  ],
+  [
+   "§3.1 spread polar arms min %",
+   "1.5"
+  ],
+  [
+   "§3.1 spread polar arms max %",
+   "3.5"
+  ],
+  [
+   "§3.1 spread other arms min %",
+   "0.1"
+  ],
+  [
+   "§3.1 spread other arms max %",
+   "11.9"
+  ],
+  [
+   "§3.1 relative cost harness_null",
+   "0.03"
+  ],
+  [
+   "§3.1 relative cost random_projection",
+   "0.23"
+  ],
+  [
+   "§3.1 relative cost multi_anchor_cosine",
+   "0.26"
+  ],
+  [
+   "§3.1 relative cost polar_project",
+   "2.62"
+  ],
+  [
+   "§3.1 relative cost sliding_window_pca",
+   "63.50"
+  ],
+  [
+   "§3.1 relative cost prepare",
+   "1.55"
+  ],
+  [
+   "§3.1 floor ratio random projection",
+   "4.3"
+  ],
+  [
+   "§3.1 floor ratio multi-anchor cosine",
+   "3.8"
+  ],
+  [
+   "§3.1 floor ratio random projection, net of harness",
+   "4.8"
+  ],
+  [
+   "§3.1 sliding-window PCA ratio",
+   "63.5"
+  ],
+  [
+   "§3.1 sliding-window PCA over project()",
+   "24"
+  ],
+  [
+   "§3.1 decompose evaluate spread %",
+   "1.8"
+  ],
+  [
+   "§3.1 working set Spinoza MB",
+   "6.8"
+  ],
+  [
+   "§3.1 working set synthetic MB",
+   "76.8"
+  ],
+  [
+   "§3.1 working set ratio",
+   "11"
+  ],
+  [
+   "§3.1 evaluate shift across working sets %",
+   "0.9"
+  ],
+  [
+   "§3.1 dispatch share at d=384 % (nearest ten)",
+   "90"
+  ],
+  [
+   "§3.1 O(d) work at d=384 us",
+   "0.6"
+  ],
+  [
+   "§3.2 alignment share of unaligned movement %",
+   "80"
+  ],
+  [
+   "§3.2 still range polar_fixed min (x1e-16)",
+   "4.3"
+  ],
+  [
+   "§3.2 still range polar_fixed max (x1e-15)",
+   "5.0"
+  ],
+  [
+   "§3.3 chance first step",
+   "0.70"
+  ],
+  [
+   "§3.3 chance last step",
+   "0.22"
+  ],
+  [
+   "§3.3 later-step lift min, operator and fit-once UMAP",
+   "1.40"
+  ],
+  [
+   "§3.3 later-step lift max, operator and fit-once UMAP",
+   "1.62"
+  ],
+  [
+   "§3.5 chance",
+   "0.0068"
+  ],
+  [
+   "§3.5 re-anchoring factor",
+   "29"
+  ],
+  [
+   "§3.5 cost build_us pca_global (ms)",
+   "63.2"
+  ],
+  [
+   "§3.5 cost build_us polar_published (ms)",
+   "0.25"
+  ],
+  [
+   "§3.5 cost build_us polar_reanchored (ms)",
+   "534"
+  ],
+  [
+   "§3.5 cost query_frame_us pca_local (us)",
+   "3749"
+  ],
+  [
+   "§3.5 cost query_frame_us polar_reanchored (us)",
+   "16.4"
+  ],
+  [
+   "§3.5 cost per_stimulus_us pca_global (us)",
+   "1.54"
+  ],
+  [
+   "§3.5 cost per_stimulus_us polar_published (us)",
+   "4.68"
+  ],
+  [
+   "§3.5 cost per_stimulus_us pca_local (us)",
+   "1.56"
+  ],
+  [
+   "§3.5 cost per_stimulus_us polar_reanchored (us)",
+   "4.64"
+  ],
+  [
+   "§3.5 cost per_stimulus_us radial_plain (us)",
+   "2.05"
+  ],
+  [
+   "§3.5 cost view_vectorized_us pca_global (ms)",
+   "1.71"
+  ],
+  [
+   "§3.5 cost view_vectorized_us polar_published (ms)",
+   "3.42"
+  ],
+  [
+   "§3.5 cost view_vectorized_us pca_local (ms)",
+   "5.53"
+  ],
+  [
+   "§3.5 cost view_vectorized_us polar_reanchored (ms)",
+   "3.54"
+  ],
+  [
+   "§3.5 cost view_vectorized_us radial_plain (ms)",
+   "1.91"
+  ],
+  [
+   "§3.5 cost view_scalar_us pca_global (ms)",
+   "3.2"
+  ],
+  [
+   "§3.5 cost view_scalar_us polar_published (ms)",
+   "10.1"
+  ],
+  [
+   "§3.5 cost view_scalar_us pca_local (ms)",
+   "7.0"
+  ],
+  [
+   "§3.5 cost view_scalar_us polar_reanchored (ms)",
+   "10.1"
+  ],
+  [
+   "§3.5 cost view_scalar_us radial_plain (ms)",
+   "4.3"
+  ],
+  [
+   "§3.5 cost query-frame ratio, local PCA over re-anchored",
+   "229"
+  ],
+  [
+   "§3.5 cost build ratio, codebook over global PCA",
+   "8.5"
+  ]
+ ]
+}
