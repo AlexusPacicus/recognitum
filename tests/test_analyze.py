@@ -276,3 +276,20 @@ def test_render_writes_counts_and_intervals():
     assert f"{100 * lo:.1f} to {100 * hi:.1f}" in text
     assert "by design" in text
     assert not math.isnan(lo)
+
+
+def test_m7_exception_is_a_cell_that_holds_a_published_string():
+    """PREDICTIONS.md: the count check is open on M7 'unless a cell happens to hold a published
+    string'. The exception is about the string the cell held, not about the new one."""
+    rows = [dict(row("M7-001", "M7", "B, other column", "check", "check"),
+                 old=r"\( 1.1 \times 10^{-12} \)", new=r"\( 1.6 \times 10^{-12} \)"),
+            dict(row("M7-002", "M7", "B, other column", "check", ""),
+                 old=r"\( 3.3 \times 10^{-12} \)", new=r"\( 3.4 \times 10^{-12} \)")]
+    def m7(published):
+        return next(p for p in an.predictions(an.q2(rows), published)
+                    if p["class"] == "M7" and p["detector"] == "count")
+    p = m7(["1.1", "9"])
+    assert p["result"] == "partial" and p["held"] is True
+    assert p["note"] == "1 of the 1 blocked hold a published string"
+    assert m7(["7.7"])["held"] is False
+    assert m7(["11.1", "1.12"])["held"] is False  # part of a longer number is not a place

@@ -7,6 +7,8 @@ No figure of the report is typed by hand: this script writes them. The only thin
 the names of the classes and the predictions of `protocol/PREDICTIONS.md`, restated as words.
 
 What is read besides the results file, and why:
+- `results/control/control.json`, for the published strings, which the prediction about M7 and the
+  count check needs;
 - the case, through `mutations.core`, for the short places of Q1 (they are never the target of a
   mutant, so the results file has no line for them) and to check the figure places against the
   lines of the class with one M2 mutant per figure place.
@@ -16,6 +18,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import json
 import math
 import re
 import sys
@@ -134,18 +137,12 @@ def _group(cls: str, stratum: str, rows: list[dict]) -> dict:
     in_rate = cls != "M6" or stratum == M6_IN_RATE
     g = {"class": cls, "stratum": stratum, "sampled": sampled, "in_rate": in_rate,
          "count_by_design": cls in COUNT_BY_DESIGN, "invalid": t["invalid"], "n": len(rows),
-         "expected": sorted({r["expected"] for r in rows})}
+         "expected": sorted({r["expected"] for r in rows}), "rows": rows}
     for d in (*DETECTORS, "either"):
         cell = dict(t[d])
         blocked = cell["check"] + cell["crash"]
         cell["interval"] = wilson(blocked, cell["valid"]) if sampled and in_rate else None
         cell["word"] = word(cell)
-        if d == "either":
-            hit = lambda r: any(r[f"{x}_by"] in ("check", "crash") for x in DETECTORS)  # noqa: E731
-        else:
-            hit = lambda r, d=d: r[f"{d}_by"] in ("check", "crash")  # noqa: E731
-        cell["blocked_no_collision"] = sum(1 for r in rows if _valid(r) and hit(r)
-                                           and not _true(r["collision"]))
         g[d] = cell
     return g
 
@@ -285,7 +282,15 @@ PREDICTED_TEXT = {"blocked": "covered, or blocked by a crash",
                   "open*": "open, unless a cell holds a published string"}
 
 
-def _held(predicted: str, cell: dict) -> bool | None:
+def holds_published(old: str, published) -> bool:
+    """Whether the string a mutant replaced holds a place of a published string, as the count
+    check matches one."""
+    text = _norm(old)
+    return any(len(s) > 1 and re.search(rf"(?<![\d.]){re.escape(s)}(?!\d|\.\d)", text)
+               for s in published)
+
+
+def _held(predicted: str, cell: dict, excepted: int = 0) -> bool | None:
     if cell is None or cell["valid"] == 0:
         return None
     blocked = cell["check"] + cell["crash"]
@@ -296,11 +301,11 @@ def _held(predicted: str, cell: dict) -> bool | None:
     if predicted == "blocked":
         return blocked == cell["valid"]
     if predicted == "open*":
-        return cell["blocked_no_collision"] == 0
+        return blocked == excepted
     raise ValueError(predicted)
 
 
-def predictions(table: list[dict]) -> list[dict]:
+def predictions(table: list[dict], published=()) -> list[dict]:
     index = {(g["class"], g["stratum"]): g for g in table}
     lines = [(c, s, d, p) for c, s, pv, pc in PREDICTED for d, p in (("verifier", pv), ("count", pc))]
     lines += [(c, s, "either", "open") for c, s in PREDICTED_EITHER]
@@ -308,13 +313,18 @@ def predictions(table: list[dict]) -> list[dict]:
     for cls, stratum, det, predicted in lines:
         g = index.get((cls, stratum))
         cell = g[det] if g else None
+        excepted, note = 0, ""
+        if predicted == "open*" and cell and cell["check"] + cell["crash"]:
+            hit = [r for r in g["rows"] if _valid(r) and r[f"{det}_by"] in ("check", "crash")]
+            excepted = sum(holds_published(r["old"], published) for r in hit)
+            note = f"{excepted} of the {len(hit)} blocked hold a published string"
         out.append({"class": cls, "stratum": stratum, "detector": det,
                     "predicted": PREDICTED_TEXT.get(predicted, predicted),
                     "result": cell["word"] if cell else "no mutant",
                     "valid": cell["valid"] if cell else 0,
                     "check": cell["check"] if cell else 0,
                     "crash": cell["crash"] if cell else 0,
-                    "held": _held(predicted, cell)})
+                    "held": _held(predicted, cell, excepted), "note": note})
     return out
 
 
@@ -363,7 +373,7 @@ def _yes(v) -> str:
     return {True: "yes", False: "NO", None: "no valid mutant"}[v]
 
 
-def render(first: list[dict], again: list[dict], case_q1: dict | None = None) -> str:
+def render(first: list[dict], again: list[dict], case_q1: dict | None = None, published=()) -> str:
     table = q2(first)
     out = ["# Tables\n",
            "Written by `analysis/analyze.py` from `results/mutants.csv`. Not edited by hand.\n",
@@ -433,9 +443,10 @@ def render(first: list[dict], again: list[dict], case_q1: dict | None = None) ->
     out.append("Each line of `protocol/PREDICTIONS.md` for Q2, next to its result.\n")
     out.append(_table(
         ["Class", "Stratum or subgroup", "Detector", "Predicted", "Result", "Blocked by a check",
-         "Blocked by a crash", "Valid", "Prediction held"],
+         "Blocked by a crash", "Valid", "Prediction held", "Note"],
         [[_label(p["class"]), p["stratum"], NAMES[p["detector"]], p["predicted"], p["result"],
-          p["check"], p["crash"], p["valid"], _yes(p["held"])] for p in predictions(table)]))
+          p["check"], p["crash"], p["valid"], _yes(p["held"]), p["note"] or "—"]
+         for p in predictions(table, published)]))
     most = q["repeated"]["places"] * 2 > q["all"]["places"] if q["all"]["places"] else None
     out.append(f"Q1, predicted: most figure places are in the `repeated` stratum. Result: "
                f"{q['repeated']['places']} of {q['all']['places']}. Prediction held: {_yes(most)}.\n")
@@ -452,7 +463,9 @@ def main(argv=None) -> None:
     first, again = split_repeats(read(Path(args.csv)))
     if Path(args.repetition).exists():
         again += read(Path(args.repetition))
-    text = render(first, again, q1_case())
+    published = json.loads((REPO / "results" / "control" / "control.json").read_text(
+        encoding="utf-8"))["published_strings"]
+    text = render(first, again, q1_case(), published)
     Path(args.out).write_text(text, encoding="utf-8")
     print(f"{args.out}: {len(first)} mutants, {len(again)} repeated lines")
 
