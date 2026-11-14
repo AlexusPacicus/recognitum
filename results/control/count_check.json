@@ -1,0 +1,28 @@
+{
+ "code_commit": "01c47af1848e6f76109b3773d07dfac03690059d",
+ "runs": [
+  {
+   "exit": 0,
+   "blocked": false,
+   "by": "",
+   "s": 0.797,
+   "out": "Count check: 0 count(s) lower than in the control\n"
+  },
+  {
+   "exit": 0,
+   "blocked": false,
+   "by": "",
+   "s": 0.672,
+   "out": "Count check: 0 count(s) lower than in the control\n"
+  },
+  {
+   "exit": 0,
+   "blocked": false,
+   "by": "",
+   "s": 0.644,
+   "out": "Count check: 0 count(s) lower than in the control\n"
+  }
+ ],
+ "count_t": 0.672,
+ "control_passes": true
+}
