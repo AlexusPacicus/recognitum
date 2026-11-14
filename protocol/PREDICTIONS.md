@@ -17,8 +17,9 @@ for the author to approve or change before the freeze.
 | M4, different sections | open | covered |
 | M5, row with status `checked` | open | open: it does not read the registry |
 | M5, other rows | open | open |
-| M6, leaf read by a check | covered, or blocked by a crash where the leaf is used as a key | open: it does not read the artifacts |
-| M6, leaf read by no check | open | open |
+| M6, read, print now false | covered, or blocked by a crash where the leaf is used as a key | open: it does not read the artifacts |
+| M6, read, print still true | not blocked; a count, outside the rate | not blocked |
+| M6, unread | not blocked; a count, outside the rate. Expected to be most of the leaves | not blocked |
 | M7, every cell | covered | open, unless a cell happens to hold a published string |
 | B1, string printed once | blocked every time: a false alarm | blocked every time: a false alarm |
 | B1, string repeated | never blocked | blocked every time: a false alarm |
