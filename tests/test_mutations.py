@@ -241,3 +241,17 @@ def test_m6_subgroups(case):
         edit = [(leaf.start, leaf.end, operators.new_leaf_text(leaf))]
         p.write_text(apply_edits(p.read_text(encoding="utf-8"), edit), encoding="utf-8")
         assert run.m6_subgroup(root, control) == "read, print now false"
+
+
+def test_runner_count_check_passes_the_control_blocks_m2_and_tells_crashes_apart(case):
+    with tempfile.TemporaryDirectory() as tmp:
+        root = run.make_copy(Path(tmp))
+        assert run.run_count_check(root, 60)["exit"] == 0
+        (root / core.MANUSCRIPT).unlink()
+        r = run.run_count_check(root, 60)
+        assert r["blocked"] and r["by"] == "crash"
+    m = operators.draw(case, "M2", 50)[0]
+    tmp, root = _copy_with(m)
+    with tmp:
+        r = run.run_count_check(root, 60)
+        assert r["exit"] == 1 and r["by"] == "check"

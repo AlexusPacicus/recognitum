@@ -33,7 +33,24 @@ CONTROL = RESULTS / "control" / "control.json"
 DRAWN = RESULTS / "drawn"
 COLUMNS = ["mutant_id", "source", "class", "expected", "seed", "target", "old", "new", "stratum",
            "code_commit", "case_hash", "status", "valid", "invalid_reason", "collision",
-           "verifier_exit", "verifier_blocked", "verifier_by", "verifier_s"]
+           "verifier_exit", "verifier_blocked", "verifier_by", "verifier_s",
+           "count_exit", "count_blocked", "count_by", "count_s"]
+COUNT_CHECK = core.REPO / "countcheck" / "count_check.py"
+COUNT_CONTROL = RESULTS / "control" / "count_check.json"
+
+
+def run_count_check(root: Path, timeout: float | None) -> dict:
+    """By a check when it ends with exit code 1; by a crash with any other non-zero code."""
+    t0 = time.monotonic()
+    try:
+        p = subprocess.run([sys.executable, str(COUNT_CHECK), "--control", str(core.CASE / core.MANUSCRIPT),
+                            "--copy", str(root / core.MANUSCRIPT), "--strings", str(CONTROL)],
+                           capture_output=True, text=True, timeout=timeout)
+    except subprocess.TimeoutExpired:
+        return {"exit": "", "blocked": "", "by": "timeout", "s": round(time.monotonic() - t0, 3)}
+    by = {0: "", 1: "check"}.get(p.returncode, "crash")
+    return {"exit": p.returncode, "blocked": p.returncode != 0, "by": by,
+            "s": round(time.monotonic() - t0, 3), "out": p.stdout[-400:]}
 
 
 def code_commit() -> str:
@@ -148,6 +165,20 @@ def cmd_control(_args) -> None:
         raise SystemExit("control does not pass: no mutant runs")
 
 
+def cmd_control_count(_args) -> None:
+    """The count check, given the control as the copy, three times: exit code 0, and its time."""
+    commit = code_commit()
+    with tempfile.TemporaryDirectory() as tmp:
+        root = make_copy(Path(tmp))
+        runs = [run_count_check(root, None) for _ in range(3)]
+    out = {"code_commit": commit, "runs": runs, "count_t": statistics.median(r["s"] for r in runs),
+           "control_passes": all(r["exit"] == 0 for r in runs)}
+    COUNT_CONTROL.write_text(json.dumps(out, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
+    print(json.dumps(out, indent=1))
+    if not out["control_passes"]:
+        raise SystemExit("count check control does not pass: no mutant runs")
+
+
 def cmd_draw(args) -> None:
     code_commit()
     control = json.loads(CONTROL.read_text(encoding="utf-8"))
@@ -170,6 +201,10 @@ def cmd_run(args) -> None:
     out = Path(args.out) if args.out else RESULTS / "mutants.csv"
     new_file = not out.exists()
     timeout = 10 * control["verifier_t"]
+    count = json.loads(COUNT_CONTROL.read_text(encoding="utf-8")) if COUNT_CONTROL.exists() else None
+    if count is not None and not count["control_passes"]:
+        raise SystemExit("count check control does not pass: no mutant runs")
+    count_timeout = 10 * count["count_t"] if count else None
     with out.open("a", newline="", encoding="utf-8") as fh:
         w = csv.DictWriter(fh, fieldnames=COLUMNS)
         if new_file:
@@ -193,15 +228,23 @@ def cmd_run(args) -> None:
                     v = run_verifier(root, timeout)
                     row.update(status="timeout" if v["by"] == "timeout" else "ok", verifier_exit=v["exit"],
                                verifier_blocked=v["blocked"], verifier_by=v["by"], verifier_s=v["s"])
+                    if count is not None:
+                        c = run_count_check(root, count_timeout)
+                        row.update(count_exit=c["exit"], count_blocked=c["blocked"], count_by=c["by"],
+                                   count_s=c["s"])
+                        if c["by"] == "timeout":
+                            row["status"] = "timeout"
             w.writerow(row)
             fh.flush()
-            print(f"{m.mutant_id} {row['status']} {row.get('verifier_by', '') or 'pass'}", flush=True)
+            print(f"{m.mutant_id} {row['status']} verifier={row.get('verifier_by', '') or 'pass'} "
+                  f"count={row.get('count_by', '') or ('pass' if count else '-')}", flush=True)
 
 
 def main(argv=None) -> None:
     ap = argparse.ArgumentParser()
     sub = ap.add_subparsers(dest="cmd", required=True)
     sub.add_parser("control").set_defaults(fn=cmd_control)
+    sub.add_parser("control-count").set_defaults(fn=cmd_control_count)
     d = sub.add_parser("draw")
     d.add_argument("cls")
     d.add_argument("--n", type=int)
