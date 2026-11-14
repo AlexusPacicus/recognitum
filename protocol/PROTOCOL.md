@@ -169,7 +169,7 @@ A model writes edits that the authors of the detectors did not choose.
 | The unmutated copy | Verifier exit code 0. Count check, given the control as the copy, exit code 0 | No mutant runs until it does |
 | Each mutant's difference | Exactly the operator's edit | The mutant is invalid (section 7) |
 | M7, the verifier's positive control | The verifier blocks every valid M7 mutant by a check | The campaign pauses for a diagnosis. If the cause is the harness, it is fixed, logged as a deviation, and every class runs again with the same seeds. If the verifier itself lets an M7 mutant through, the campaign goes on and that is reported first among its results |
-| M2, the count check's positive control | The count check blocks every valid M2 mutant by a check, with exit code 1 | The same, for the count check |
+| M2 and M1, the count check's control, in both directions | The count check blocks every valid M2 mutant by a check, with exit code 1, and blocks no valid M1 mutant. Both follow from its design, so this control tests the script and the harness, not the design: it fails if the script cuts sections or matches places wrongly, or if the harness hands it the wrong copy | The same as for M7, for the count check |
 | Repetition | The first five mutants of each class, run twice, give the same line in the results file, the time aside | The class is reported as not measured for the detector that differs |
 
 ## 6. Order of work
@@ -234,3 +234,12 @@ No figure in the report is typed by hand: a script writes every table from `resu
 | Timeout | ten times the time on the control | Wide enough for a slow run, short enough to end a hung one |
 | Confidence level | 95 % | Convention |
 | Count check deadline | Saturday 21:30 CET | The red team's edits and the analysis still fit before midnight |
+
+## 10. Reviews
+
+The verdicts are in `reviews`, as returned. The change made after the second verdict, to the count
+check's control in section 5, was not reviewed again.
+
+Reviewed by: Claude Code (blind-review, claude-opus-5-5), 2026-11-14, phase 1, commit 4592d9ab36b08e2b8b5cc656db293fabc1a3cbf1, CHANGES (7 blocking, 12 non-blocking)
+
+Reviewed by: blind-reviewer subagent (kit blind-review procedure, phase 1), 2026-11-14, commit b0d00eab0d14cc7fd019e1ba45389d0d244e353d, CHANGES (1 blocking, 2 non-blocking)
