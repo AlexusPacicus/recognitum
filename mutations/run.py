@@ -200,6 +200,11 @@ def cmd_run(args) -> None:
         mutants = mutants[: args.limit]
     out = Path(args.out) if args.out else RESULTS / "mutants.csv"
     new_file = not out.exists()
+    if not new_file and not args.again:
+        # A line is never removed or written twice: mutants already in the file are skipped.
+        with out.open(newline="", encoding="utf-8") as fh:
+            done = {r["mutant_id"] for r in csv.DictReader(fh)}
+        mutants = [m for m in mutants if m.mutant_id not in done]
     timeout = 10 * control["verifier_t"]
     count = json.loads(COUNT_CONTROL.read_text(encoding="utf-8")) if COUNT_CONTROL.exists() else None
     if count is not None and not count["control_passes"]:
@@ -253,6 +258,7 @@ def main(argv=None) -> None:
     r.add_argument("cls")
     r.add_argument("--out")
     r.add_argument("--limit", type=int)
+    r.add_argument("--again", action="store_true", help="run mutants already in the output file (repetition)")
     r.set_defaults(fn=cmd_run)
     args = ap.parse_args(argv)
     args.fn(args)
