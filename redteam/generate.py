@@ -217,7 +217,8 @@ def main(argv=None) -> None:
         print(f"files in its temporary directory afterwards: {r['tmp_files_after']}")
         trace = (PROBES / r["response"].replace(".txt", ".stderr.txt")).read_text(encoding="utf-8",
                                                                                   errors="replace")
-        print("tools the model called:", sorted(set(re.findall(r"^[→✱✗$] ?(\w+)", trace, re.M))))
+        plain = re.sub(r"\x1b\[[0-9;]*m", "", trace)  # the client colours its lines
+        print("tools the model called:", sorted(set(re.findall(r"^\s*[→✱✗$] ?(\w+)", plain, re.M))))
         print("directories outside its folder that the client lets it read:")
         for p in sorted(set(re.findall(r'"external_directory","pattern":"([^"]+)","action":"allow"', trace))
                         | set(re.findall(r'"pattern":"([^"]+)","action":"allow"', trace))):
