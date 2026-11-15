@@ -1,7 +1,8 @@
 """Generate the red team's responses: one fresh conversation per call of the client (section 4).
 
     python redteam/generate.py main --model PROVIDER/MODEL   # R1-1 to R1-6 and R2, at the same time
-    python redteam/generate.py R3 --model PROVIDER/MODEL     # deviation 2: only after the seven
+    python redteam/generate.py R3 --model PROVIDER/MODEL --output-max 512000 --timeout 10800
+                                                             # deviation 2: only after the seven; cap: deviation 9
     python redteam/generate.py main --model PROVIDER/MODEL --dry-run   # prints the commands, calls nothing
     python redteam/generate.py R2-third --model PROVIDER/MODEL --output-max 512000 --timeout 10800
                                                              # deviation 9: R2-3, once
@@ -73,6 +74,8 @@ def plan(which: str) -> list[dict]:
 # catalogue of the client gives minimax-m3.1-flash-free an output limit of 512000.
 OUTPUT_MAX_VAR = "OPENCODE_EXPERIMENTAL_OUTPUT_TOKEN_MAX"
 R2_THIRD_OUTPUT_MAX = 512000
+# Deviation 9, the author's decision before R3 runs: R3 has the same cap.
+REQUIRED_OUTPUT_MAX = {"R2-third": R2_THIRD_OUTPUT_MAX, "R3": R2_THIRD_OUTPUT_MAX}
 
 
 def response_name(conversation_id: str, model: str, date: str) -> str:
@@ -210,11 +213,10 @@ def generate(which: str, *, client: str, model: str, date: str, files, prompts, 
         raise SystemExit(f"already generated, and nothing is run twice: {', '.join(again)}")
     if which == "R2-again" and "R2-1" not in existing:
         raise SystemExit("R2-2 is a second asking: R2-1 has not been generated")
-    if which == "R2-third":
-        if "R2-2" not in existing:
-            raise SystemExit("R2-3 is a third asking: R2-2 has not been generated")
-        if output_max != R2_THIRD_OUTPUT_MAX:
-            raise SystemExit(f"R2-3 runs with --output-max {R2_THIRD_OUTPUT_MAX} (deviation 9), not {output_max}")
+    if which == "R2-third" and "R2-2" not in existing:
+        raise SystemExit("R2-3 is a third asking: R2-2 has not been generated")
+    if which in REQUIRED_OUTPUT_MAX and output_max != REQUIRED_OUTPUT_MAX[which]:
+        raise SystemExit(f"{which} runs with --output-max {REQUIRED_OUTPUT_MAX[which]} (deviation 9), not {output_max}")
     if which == "R3" and require_main:
         lacking = sorted(c["id"] for c in plan("main") if c["id"] not in existing)
         if lacking:

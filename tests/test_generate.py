@@ -109,7 +109,7 @@ def test_the_agent_only_reads():
 
 
 def test_the_record_names_the_agent_and_its_configuration(tmp_path, setup):
-    records = gen.generate("R3", client=client(tmp_path), jobs=1, require_main=False, **setup)
+    records = gen.generate("R3", output_max=512000, client=client(tmp_path), jobs=1, require_main=False, **setup)
     assert records[0]["agent"] == "redteam" and len(records[0]["config_sha256"]) == 64
 
 
@@ -138,7 +138,7 @@ def test_each_conversation_is_recorded(tmp_path, setup):
 
 def test_a_model_that_writes_in_its_folder_is_recorded_not_hidden(tmp_path, setup):
     extra = "open('paper.md', 'a').write('x'); open('note.txt', 'w').write('y')"
-    records = gen.generate("R3", client=client(tmp_path, extra), jobs=1, require_main=False, **setup)
+    records = gen.generate("R3", output_max=512000, client=client(tmp_path, extra), jobs=1, require_main=False, **setup)
     assert records[0]["inputs_unchanged"] is False
     assert records[0]["files_after"] == ["note.txt", "paper.md", "verify.py"]
     # the next conversation still starts from the files as released
@@ -147,7 +147,7 @@ def test_a_model_that_writes_in_its_folder_is_recorded_not_hidden(tmp_path, setu
 
 def test_each_session_has_its_own_folder_outside_the_repository_and_it_is_kept(tmp_path, setup):
     extra = "open(os.path.join(os.environ['TMPDIR'], 'check.py'), 'w').write('x')"
-    records = gen.generate("R3", client=client(tmp_path, extra), jobs=1, require_main=False, **setup)
+    records = gen.generate("R3", output_max=512000, client=client(tmp_path, extra), jobs=1, require_main=False, **setup)
     session = setup["runs"] / records[0]["session"]
     assert records[0]["session"].startswith("R3-1-")
     assert sorted(p.name for p in session.iterdir()) == ["tmp", "work"]
@@ -161,7 +161,7 @@ def test_sessions_never_run_inside_a_repository(tmp_path, setup):
     (tmp_path / "repo" / ".git").mkdir(parents=True)
     setup["runs"] = tmp_path / "repo" / "redteam" / "runs"
     with pytest.raises(SystemExit, match="inside a git repository"):
-        gen.generate("R3", client=client(tmp_path), jobs=1, require_main=False, **setup)
+        gen.generate("R3", output_max=512000, client=client(tmp_path), jobs=1, require_main=False, **setup)
     assert not setup["responses"].exists() or not list(setup["responses"].iterdir())
 
 
@@ -173,7 +173,7 @@ def test_no_conversation_is_run_twice(tmp_path, setup):
 
 
 def test_a_failed_conversation_is_stored_and_not_retried(tmp_path, setup):
-    records = gen.generate("R3", client=client(tmp_path, "raise SystemExit(3)"), jobs=1,
+    records = gen.generate("R3", output_max=512000, client=client(tmp_path, "raise SystemExit(3)"), jobs=1,
                            require_main=False, **setup)
     assert records[0]["exit"] == 3
     assert (setup["responses"] / records[0]["response"]).exists()
@@ -202,10 +202,11 @@ ECHO_CAP = 'print("output-max:" + os.environ.get("OPENCODE_EXPERIMENTAL_OUTPUT_T
 def test_the_client_keeps_its_own_output_cap_unless_one_is_given(tmp_path, setup):
     """Until deviation 9 no cap was given: the client used its own, 32000 tokens, and the record
     says so by `null`."""
-    records = gen.generate("R3", client=client(tmp_path, ECHO_CAP), jobs=1, require_main=False, **setup)
-    text = (setup["responses"] / records[0]["response"]).read_text(encoding="utf-8")
-    assert "output-max:unset" in text
-    assert records[0]["output_token_max"] is None and records[0]["timeout"] == 1800
+    records = gen.generate("main", client=client(tmp_path, ECHO_CAP), jobs=4, **setup)
+    for r in records:
+        text = (setup["responses"] / r["response"]).read_text(encoding="utf-8")
+        assert "output-max:unset" in text
+        assert r["output_token_max"] is None and r["timeout"] == 1800
 
 
 def test_r2_is_asked_a_third_time_with_the_output_cap_of_the_model(tmp_path, setup):
@@ -232,8 +233,22 @@ def test_r2_is_asked_a_third_time_with_the_output_cap_of_the_model(tmp_path, set
         gen.generate("R2-third", client=stub, jobs=1, output_max=512000, **setup)
 
 
+def test_r3_runs_with_the_output_cap_of_the_model(tmp_path, setup):
+    """Deviation 9, the author's decision before R3 runs: R3 has the cap of R2-3, so that it cannot
+    end on the client's 32000 as R2-1 and R2-2 did."""
+    stub = client(tmp_path, ECHO_CAP)
+    for cap in (None, 32000):
+        with pytest.raises(SystemExit, match="512000"):
+            gen.generate("R3", client=stub, jobs=1, require_main=False, output_max=cap, **setup)
+    assert not (setup["responses"].exists() and any(setup["responses"].iterdir()))
+    records = gen.generate("R3", client=stub, jobs=1, require_main=False, output_max=512000, timeout=10800,
+                           **setup)
+    text = (setup["responses"] / records[0]["response"]).read_text(encoding="utf-8")
+    assert "output-max:512000" in text and records[0]["output_token_max"] == 512000
+
+
 def test_r3_runs_only_after_the_seven(tmp_path, setup):
     with pytest.raises(SystemExit, match="R3 runs after"):
-        gen.generate("R3", client=client(tmp_path), jobs=1, **setup)
+        gen.generate("R3", output_max=512000, client=client(tmp_path), jobs=1, **setup)
     gen.generate("main", client=client(tmp_path), jobs=4, **setup)
-    assert len(gen.generate("R3", client=client(tmp_path), jobs=1, **setup)) == 1
+    assert len(gen.generate("R3", output_max=512000, client=client(tmp_path), jobs=1, **setup)) == 1

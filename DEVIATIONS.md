@@ -317,3 +317,10 @@ reported as empty, with the cause the client's store gives. Part R3 has not run;
 with the same cap is decided by the author before it runs, and written here.
 
 **From here on:** R2-3 is the last asking of part R2.
+
+**Part R3, decided before it runs** (author, 15 November 2026, after R2-3 ran and its ten edits went
+through both detectors, commit `f134ed3`): R3 runs with the same cap, 512,000, and the same timeout,
+10,800 s. The script refuses R3 with any other cap. R3 is asked once, as deviation 7 says; if it ends
+on `length` or on the timeout, it is reported as such, with the cause the client's store gives.
+
+    python redteam/generate.py R3 --model opencode/minimax-m3.1-flash-free --output-max 512000 --timeout 10800
