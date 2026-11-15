@@ -7,9 +7,9 @@ The blueprint allowed two rounds in phase 1. This is the second and last. The ch
 after this verdict and **was not reviewed again**. Nothing had run when it was made: commit b0d00ea
 was never pushed, and the freeze is the commit that holds this change.
 
-**How this round was run:** [the model, and the client it ran in]. [If it ran outside Claude Code:
-the kit's hook that denies reads outside the package did not apply, so the reviewer's blindness
-rests on its instructions and on its own statement.]
+**How this round was run:** in opencode, with Nemotron 3.5 Super VL Free, and with the kit's hooks active, so reads
+outside the package were denied as in the first round. The first round ran in Claude Code with
+claude-opus-5-5. The two rounds were made by different models.
 
 ## Blocking item
 
