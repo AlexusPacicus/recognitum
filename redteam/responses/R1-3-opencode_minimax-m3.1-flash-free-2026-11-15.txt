@@ -1,0 +1,34 @@
+```json
+[
+  {
+    "line": 62,
+    "old": "0.925",
+    "new": "0.955",
+    "why": "The abstract now states that rendering λ in length units lifts the operator to 0.955 local recall@15 when the measured value (§3.5's ablation table and bench/results/reanchor_ablation.json) is 0.925, and the verifier's presence check still passes because \"0.925\" is printed nine other times in the manuscript."
+  },
+  {
+    "line": 743,
+    "old": "16.4",
+    "new": "164",
+    "why": "The §3.5 cost table now claims the re-anchored frame costs 164 µs per query, contradicting the measured 16.4 µs in bench/results/reanchor.json and the 229× ratio §3.5's prose derives from it, while the presence check passes because \"16.4\" still appears at lines 136, 762, 1143 and 1153."
+  },
+  {
+    "line": 452,
+    "old": "4.3×",
+    "new": "6.3×",
+    "why": "§3.1 now claims the operator costs 6.3× a random projection when the measured ratio is 4.3× (4.66 µs vs 1.08 µs), and the verifier does not notice because the guarded string \"4.3\" survives elsewhere in the text (line 535's 4.3 × 10⁻¹⁶ p95 figure, lines 744 and 766)."
+  },
+  {
+    "line": 1181,
+    "old": "1.39×",
+    "new": "2.39×",
+    "why": "Appendix B now claims Proposition 3's scalar rearrangement of d_esc is 2.39× faster than the vector form when the measured speedup is 1.39× (4.64 µs vs 3.34 µs), and the recomputed §B table check only covers the four conditioning rows, while the presence check finds \"1.39\" at lines 146, 599, 1012 and 1222."
+  },
+  {
+    "line": 721,
+    "old": "50 query chunks",
+    "new": "500 query chunks",
+    "why": "The §3.5 method now states that 500 query chunks were sampled for the re-anchoring evaluation, when the measurement used 50 queries, and no check in the verifier registers the query count at all."
+  }
+]
+```
