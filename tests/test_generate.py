@@ -22,6 +22,8 @@ print("attached-absolute-in-folder:" + str(len(attached) == 2 and all(
     os.path.isabs(a) and os.path.isfile(a) and os.path.dirname(os.path.realpath(a)) == here
     for a in attached)))
 print("pwd-is-folder:" + str(os.path.realpath(os.environ.get("PWD", "")) == here))
+print("dir-is-the-real-path:" + str("--dir" in sys.argv and sys.argv[sys.argv.index("--dir") + 1] == here))
+print("config:" + os.path.basename(os.environ.get("OPENCODE_CONFIG", "none")))
 print("dir-is-folder:" + str(os.path.realpath(sys.argv[sys.argv.index("--dir") + 1]) == here
                              if "--dir" in sys.argv else False))
 print('[{{"line": 1, "old": "a", "new": "b", "why": "w"}}]')
@@ -76,9 +78,39 @@ def test_a_conversation_sees_two_files_and_its_output_is_stored_as_returned(tmp_
     # launch failed on `File not found` for a relative name. Every way of naming the folder is used.
     assert "attached-absolute-in-folder:True" in text
     assert "pwd-is-folder:True" in text and "dir-is-folder:True" in text
+    # The second launch: the client took the folder for a directory outside its project and
+    # rejected the model's reads, and the model had a shell. The folder is named by its real path,
+    # and the agent is one that only reads.
+    assert "dir-is-the-real-path:True" in text
+    assert "--agent|redteam" in text and "config:opencode.json" in text
     assert "--pure" in text and "prov/some-model" in text and "--auto" not in text
     assert rt.parse_response(text) == [{"line": 1, "old": "a", "new": "b", "why": "w"}]
     assert len(rt.read_responses(setup["responses"])) == 7
+
+
+def test_the_agent_only_reads():
+    config = json.loads(gen.CONFIG.read_text(encoding="utf-8"))
+    agent = config["agent"][gen.AGENT]
+    for tool in ("bash", "edit", "write", "webfetch", "task"):
+        assert agent["tools"][tool] is False
+    for what in ("bash", "edit", "webfetch", "external_directory"):
+        assert agent["permission"][what] == "deny"
+    assert "prompt" not in agent  # nothing is said to the model besides the prompt of the protocol
+
+
+def test_the_record_names_the_agent_and_its_configuration(tmp_path, setup):
+    records = gen.generate("R3", client=client(tmp_path), jobs=1, require_main=False, **setup)
+    assert records[0]["agent"] == "redteam" and len(records[0]["config_sha256"]) == 64
+
+
+def test_the_probe_uses_toy_files_and_writes_no_response(tmp_path, setup):
+    out = tmp_path / "probes"
+    record = gen.probe(client=client(tmp_path), model="prov/m", out=out)
+    text = (out / record["response"]).read_text(encoding="utf-8")
+    assert "cwd-files:toy.md" in text and "--agent|redteam" in text
+    assert "polar" not in text
+    assert not setup["responses"].exists()
+    assert gen.PROBE_WORD not in gen.PROBE_PROMPT  # the word is only in the file, far past its start
 
 
 def test_each_conversation_is_recorded(tmp_path, setup):

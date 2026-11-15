@@ -1,0 +1,25 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "agent": {
+    "redteam": {
+      "description": "Reads the files of its folder. No shell, no edit, no network, no subagent.",
+      "mode": "primary",
+      "tools": {
+        "bash": false,
+        "edit": false,
+        "write": false,
+        "patch": false,
+        "webfetch": false,
+        "websearch": false,
+        "task": false,
+        "todowrite": false
+      },
+      "permission": {
+        "bash": "deny",
+        "edit": "deny",
+        "webfetch": "deny",
+        "external_directory": "deny"
+      }
+    }
+  }
+}

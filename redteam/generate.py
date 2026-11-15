@@ -42,6 +42,9 @@ FILES = [REPO / "case" / "paper" / "polar-projector-paper.md", REPO / "case" / "
 PROMPTS = HERE / "prompts"
 RESPONSES = HERE / "responses"
 LOG = HERE / "generation.jsonl"
+CONFIG = HERE / "opencode.json"
+AGENT = "redteam"
+PROBES = HERE / "probes"
 _lock = threading.Lock()
 
 
@@ -70,25 +73,28 @@ def command(client: str, model: str, conversation_id: str, prompt: str, names: l
     # The message comes before the options: `-f` takes a list and would take the message too.
     # The folder is named in full: the client does not resolve an attached file against the
     # directory it is started in (the first launch ended on `File not found` for a bare name).
-    cmd = [client, "run", prompt, "--pure", "-m", model, "--title", conversation_id, "--dir", folder]
+    # The agent is the one of `redteam/opencode.json`: it reads, and has no shell, no edit, no
+    # network and no subagent (in the second launch the model had a shell).
+    cmd = [client, "run", prompt, "--pure", "--agent", AGENT, "-m", model, "--title", conversation_id,
+           "--dir", folder]
     for n in names:
         cmd += ["-f", f"{folder}/{n}"]
     return cmd
 
 
-def _one(conv: dict, *, client, model, date, files, prompts, responses, log, version, timeout) -> dict:
-    prompt_file = Path(prompts) / f"{conv['part']}.txt"
-    prompt = prompt_file.read_text(encoding="utf-8").strip()
-    name = response_name(conv["id"], model, date)
+def _call(client: str, model: str, title: str, prompt: str, contents: dict[str, bytes], timeout) -> dict:
+    """One call of the client in a new folder that holds `contents` and nothing else."""
     with tempfile.TemporaryDirectory(prefix="redteam-") as tmp:
-        folder = Path(tmp)
-        for f in files:
-            shutil.copyfile(f, folder / Path(f).name)
-        before = {Path(f).name: _sha((folder / Path(f).name).read_bytes()) for f in files}
+        # The real path: the client takes a folder reached through a symbolic link for a directory
+        # outside its project, and rejects the reads of the model there (the second launch).
+        folder = Path(tmp).resolve()
+        for name, data in contents.items():
+            (folder / name).write_bytes(data)
+        before = {name: _sha(data) for name, data in contents.items()}
         started = _now()
         try:
-            p = subprocess.run(command(client, model, conv["id"], prompt, sorted(before), str(folder)),
-                               cwd=folder, env=dict(os.environ, PWD=str(folder)),
+            p = subprocess.run(command(client, model, title, prompt, sorted(before), str(folder)),
+                               cwd=folder, env=dict(os.environ, PWD=str(folder), OPENCODE_CONFIG=str(CONFIG)),
                                stdin=subprocess.DEVNULL, capture_output=True, timeout=timeout)
             out, err, code = p.stdout, p.stderr, p.returncode
         except subprocess.TimeoutExpired as exc:
@@ -97,14 +103,51 @@ def _one(conv: dict, *, client, model, date, files, prompts, responses, log, ver
         after = sorted(x.relative_to(folder).as_posix() for x in folder.rglob("*") if x.is_file())
         unchanged = all((folder / n).is_file() and _sha((folder / n).read_bytes()) == h
                         for n, h in before.items())
-    (Path(responses) / name).write_bytes(out)
-    record = {"id": conv["id"], "part": conv["part"], "model": model, "client": Path(client).name,
-              "client_version": version, "started": started, "ended": ended, "exit": code,
-              "prompt_file": prompt_file.name, "prompt_sha256": _sha(prompt.encode("utf-8")),
-              "inputs_sha256": before, "inputs_unchanged": unchanged, "files_after": after,
-              "response": name, "response_sha256": _sha(out),
-              "stderr_tail": err.decode("utf-8", "replace")[-600:]}
+    return {"out": out, "err": err,
+            "record": {"model": model, "client": Path(client).name, "agent": AGENT,
+                       "config_sha256": _sha(CONFIG.read_bytes()), "started": started, "ended": ended,
+                       "exit": code, "prompt_sha256": _sha(prompt.encode("utf-8")),
+                       "inputs_sha256": before, "inputs_unchanged": unchanged, "files_after": after,
+                       "response_sha256": _sha(out), "stderr_sha256": _sha(err),
+                       "stderr_tail": err.decode("utf-8", "replace")[-600:]}}
+
+
+def _one(conv: dict, *, client, model, date, files, prompts, responses, log, version, timeout) -> dict:
+    prompt_file = Path(prompts) / f"{conv['part']}.txt"
+    prompt = prompt_file.read_text(encoding="utf-8").strip()
+    name = response_name(conv["id"], model, date)
+    done = _call(client, model, conv["id"], prompt, {Path(f).name: Path(f).read_bytes() for f in files}, timeout)
+    (Path(responses) / name).write_bytes(done["out"])
+    # What the client printed beside the response: the tools the model called and what they gave.
+    traces = Path(log).parent / "traces"
+    traces.mkdir(exist_ok=True)
+    (traces / name).write_bytes(done["err"])
+    record = {"id": conv["id"], "part": conv["part"], "client_version": version,
+              "prompt_file": prompt_file.name, "response": name, **done["record"]}
     with _lock, Path(log).open("a", encoding="utf-8") as fh:
+        fh.write(json.dumps(record, ensure_ascii=False) + "\n")
+    return record
+
+
+PROBE_WORD = "quokka"
+PROBE_PROMPT = ("This is a test of the tools you have, on a toy file. Answer four things, each on its own "
+                "line. 1: the single word on line 850 of the attached file toy.md. 2: run the shell command "
+                "`echo shell-works` and say whether you could. 3: read the file /etc/hosts and say whether "
+                "you could. 4: create a file named made.txt in your folder and say whether you could.")
+
+
+def probe(*, client: str, model: str, out: Path, timeout: float = 600) -> dict:
+    """One conversation on a toy file, to see what the agent can do. It is not a conversation of
+    the red team: neither the manuscript nor the verifier is sent, and no response is written."""
+    toy = "".join(f"line {k}: {PROBE_WORD if k == 850 else 'nothing here'}\n" for k in range(1, 1201))
+    done = _call(client, model, "probe", PROBE_PROMPT, {"toy.md": toy.encode("utf-8")}, timeout)
+    out = Path(out)
+    out.mkdir(parents=True, exist_ok=True)
+    stamp = dt.datetime.now().strftime("%Y%m%dT%H%M%S")
+    (out / f"probe-{stamp}.txt").write_bytes(done["out"])
+    (out / f"probe-{stamp}.stderr.txt").write_bytes(done["err"])
+    record = {"id": "probe", "response": f"probe-{stamp}.txt", **done["record"]}
+    with (out / "probes.jsonl").open("a", encoding="utf-8") as fh:
         fh.write(json.dumps(record, ensure_ascii=False) + "\n")
     return record
 
@@ -132,7 +175,7 @@ def generate(which: str, *, client: str, model: str, date: str, files, prompts, 
 
 def main(argv=None) -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("which", choices=["main", "R3"])
+    ap.add_argument("which", choices=["main", "R3", "probe"])
     ap.add_argument("--model", required=True, help="as the client names it: provider/model")
     ap.add_argument("--client", default="opencode")
     ap.add_argument("--jobs", type=int, default=7, help="conversations at the same time")
@@ -140,6 +183,15 @@ def main(argv=None) -> None:
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args(argv)
     client = shutil.which(args.client) or args.client
+    if args.which == "probe":
+        r = probe(client=client, model=args.model, out=PROBES, timeout=args.timeout)
+        print(f"exit={r['exit']} files afterwards: {r['files_after']}")
+        print(f"--- what the model answered (redteam/probes/{r['response']}):")
+        print((PROBES / r["response"]).read_text(encoding="utf-8", errors="replace"))
+        print("--- what the client printed beside it:")
+        print((PROBES / r["response"].replace(".txt", ".stderr.txt")).read_text(encoding="utf-8",
+                                                                               errors="replace")[-3000:])
+        return
     if args.dry_run:
         for c in plan(args.which):
             cmd = command(client, args.model, c["id"], f"<redteam/prompts/{c['part']}.txt>",
