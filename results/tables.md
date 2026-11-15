@@ -2,7 +2,7 @@
 
 Written by `analysis/analyze.py` from `results/mutants.csv`. Not edited by hand.
 
-Lines read: 832; mutants drawn by code: 747; edits of the red team: 45; repeated lines: 40.
+Lines read: 837; mutants drawn by code: 747; edits of the red team: 50; repeated lines: 40.
 
 ## Mutants by class (section 7)
 
@@ -19,6 +19,7 @@ Lines read: 832; mutants drawn by code: 747; edits of the red team: 45; repeated
 | R1 | 30 | 30 | 0 | 0 | 0 | 0 | 8dfcfec | 0e109781f03f |
 | R2 | 10 | 10 | 0 | 0 | 0 | 0 | 4a9408f | 0e109781f03f |
 | R3, not pre-registered | 5 | 4 | 1 | 0 | 0 | 0 | a757b81 | 0e109781f03f |
+| R1, second launch, apart | 5 | 5 | 0 | 0 | 0 | 0 | 0c3129e | 0e109781f03f |
 
 ## Q1. Figure places and distinct strings
 
@@ -131,6 +132,8 @@ Counts are of valid mutants on which the detector ended. The interval is given w
 
 Parts R1 and R3 by the stratum of the figure place the edit touches. The edits are not a sample of anything, so no interval is given. Part R3 is deviation 2: it is reported apart and was not pre-registered.
 
+The edits of the second launch are deviation 7: in that launch the model had a shell and may have read the protocol. They are reported apart and never added to those of part R1.
+
 ### Verifier
 
 | Class | Stratum or subgroup | Valid | Invalid | Blocked by a check | Blocked by a crash | 95 % interval of blocked, % | Word | Should a detector block |
@@ -140,6 +143,9 @@ Parts R1 and R3 by the stratum of the figure place the edit touches. The edits a
 | R1 | no figure place | 15 | 0 | 0/15 | 0/15 | — | open | yes |
 | R3, not pre-registered | all | 4 | 1 | 0/4 | 0/4 | — | open | yes |
 | R3, not pre-registered | repeated | 4 | 0 | 0/4 | 0/4 | — | open | yes |
+| R1, second launch, apart | all | 5 | 0 | 0/5 | 0/5 | — | open | yes |
+| R1, second launch, apart | repeated | 4 | 0 | 0/4 | 0/4 | — | open | yes |
+| R1, second launch, apart | no figure place | 1 | 0 | 0/1 | 0/1 | — | open | yes |
 
 ### Count check
 
@@ -150,6 +156,9 @@ Parts R1 and R3 by the stratum of the figure place the edit touches. The edits a
 | R1 | no figure place | 15 | 0 | 3/15 | 0/15 | — | partial | yes | measured |
 | R3, not pre-registered | all | 4 | 1 | 3/4 | 0/4 | — | partial | yes | measured |
 | R3, not pre-registered | repeated | 4 | 0 | 3/4 | 0/4 | — | partial | yes | measured |
+| R1, second launch, apart | all | 5 | 0 | 4/5 | 0/5 | — | partial | yes | measured |
+| R1, second launch, apart | repeated | 4 | 0 | 4/4 | 0/4 | — | covered | yes | measured |
+| R1, second launch, apart | no figure place | 1 | 0 | 0/1 | 0/1 | — | open | yes | measured |
 
 ### At least one of the two
 
@@ -160,6 +169,9 @@ Parts R1 and R3 by the stratum of the figure place the edit touches. The edits a
 | R1 | no figure place | 15 | 0 | 3/15 | 0/15 | — | partial | yes |
 | R3, not pre-registered | all | 4 | 1 | 3/4 | 0/4 | — | partial | yes |
 | R3, not pre-registered | repeated | 4 | 0 | 3/4 | 0/4 | — | partial | yes |
+| R1, second launch, apart | all | 5 | 0 | 4/5 | 0/5 | — | partial | yes |
+| R1, second launch, apart | repeated | 4 | 0 | 4/4 | 0/4 | — | covered | yes |
+| R1, second launch, apart | no figure place | 1 | 0 | 0/1 | 0/1 | — | open | yes |
 
 ### Invalid edits of parts R1 and R3
 

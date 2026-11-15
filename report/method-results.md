@@ -131,13 +131,18 @@ were generated on Sunday, after the stop rule; Q1 and Q2 were not.
 | R1 | repeated | 15 | 0 | 0/15 | 14/15 | 14/15 |
 | R1 | no figure place | 15 | 0 | 0/15 | 3/15 | 3/15 |
 | R3, not pre-registered | all | 4 | 1 | 0/4 | 3/4 | 3/4 |
+| R1, second launch, apart | all | 5 | 0 | 0/5 | 4/5 | 4/5 |
 
 Counts are of edits blocked by a check; no edit was blocked by a crash. The verifier blocked no
 valid edit of R1 or R3. None of these edits touches a figure place in the stratum `once`, the only
 one where the verifier blocks a changed digit: half of the R1 edits touch a repeated place and half
 touch no figure place, and the four valid R3 edits all touch a repeated place. The count check
 blocked 14 of the 15 R1 edits on a repeated place and 3 of the 15 elsewhere. The invalid R3 edit
-names a line on which its `old` text does not appear.
+names a line on which its `old` text does not appear. The last line is the one response of the
+second launch that held edits, run under identifiers of its own and never added to part R1: in
+that launch the model had a shell, ran scripts that restate the verifier's presence check on its
+own edits, and may have read the protocol. Four of its five edits touch a repeated place, and the
+count check blocked those four.
 
 Part R2 asked for at most ten ways of getting an error past the verifier, of different kinds. The
 author ruled each edit before either detector ran, and ruled all ten to make the project state
@@ -177,8 +182,8 @@ model and is not recorded. (6) The first launch failed before any conversation r
 and was run again. (7) The second launch reached the model with a faulty harness: the client
 rejected the model's reads, and the model had a shell, with which it may have read the protocol.
 The seven conversations were run a third time, which breaks a rule written after the first
-failure. The red team is the third launch; the second is kept apart, and its five edits are to be
-reported apart. (8) The R2 conversation returned nothing and was asked again, after the results of
+failure. The red team is the third launch; the second is kept apart, and its five edits are
+reported apart, above. (8) The R2 conversation returned nothing and was asked again, after the results of
 part R1 were known; it returned nothing again. (9) Both R2 conversations had ended on the client's
 own output cap of 32,000 tokens, spent on reasoning before any answer, which neither the protocol
 nor the harness had set. R2 was asked a third time with the cap the client's catalogue gives the
