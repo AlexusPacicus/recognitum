@@ -1,0 +1,96 @@
+Ten attacks, all in the manuscript (the only file the verifier parses beyond the artifacts it compares digit-wise). The exploitable holes: the presence check is global and not positional, only the §B/§C tables are compared cell-by-cell, one-character published strings are exempt, and units/labels/prose/figures are never read.
+
+```json
+[
+  {
+    "name": "one-character-figure-exemption",
+    "file": "polar-projector-paper.md",
+    "line": 504,
+    "old": "| UMAP, refit per step | 1.1606 | 1.5165 | 0/7 | 0.9049 | — | — |",
+    "new": "| UMAP, refit per step | 1.1606 | 1.5165 | 7/7 | 0.9049 | — | — |",
+    "why": "The manuscript now states that UMAP refitting relocated no placed point at any of the seven growth steps although the artifact records zero still steps for that arm, because the checker compares the artifact's own count to its hard-coded \"0\" and skips one-character published strings in the presence check, so the manuscript's column is never compared to anything.",
+    "expects": "pass"
+  },
+  {
+    "name": "unit-header-relabel",
+    "file": "polar-projector-paper.md",
+    "line": 738,
+    "old": "Once (ms)",
+    "new": "Once (µs)",
+    "why": "The build column now reads in microseconds, so the paper reports the re-anchoring codebook build as 534 µs and the global PCA fit as 63.2 µs when the artifact stores 534 ms and 63.2 ms, because the checker matches only the digits against the artifact and never reads a unit out of a table header.",
+    "expects": "pass"
+  },
+  {
+    "name": "prose-comparison-flip",
+    "file": "polar-projector-paper.md",
+    "line": 776,
+    "old": "*below*",
+    "new": "*above*",
+    "why": "The paper now claims the locally refitted PCA (0.023) beats the global fit (0.056), the reverse of what was measured, since the verifier parses no prose and only requires both numbers to occur somewhere in the text.",
+    "expects": "pass"
+  },
+  {
+    "name": "figure-caption-falsification",
+    "file": "polar-projector-paper.md",
+    "line": 815,
+    "old": "gives 0.925",
+    "new": "gives 0.995",
+    "why": "The caption of fig. 3 now misreports the plotted value as 0.995 rather than the measured 0.925, and the checker never opens any image file, so neither the caption nor the figure it describes is verified.",
+    "expects": "pass"
+  },
+  {
+    "name": "unregistered-parameter-edit",
+    "file": "polar-projector-paper.md",
+    "line": 721,
+    "old": "50 query chunks",
+    "new": "500 query chunks",
+    "why": "The paper now claims the §3.5 instrument averaged over 500 queries when the artifact was produced with 50, so every §3.5 mean and median is presented as far better determined than it is, and no check registers the query count.",
+    "expects": "pass"
+  },
+  {
+    "name": "unchecked-placeholder-fill",
+    "file": "polar-projector-paper.md",
+    "line": 843,
+    "old": "| UMAP or t-SNE, refit per step | yes, at every step | yes | — |",
+    "new": "| UMAP or t-SNE, refit per step | yes, at every step | yes | 0.712 |",
+    "why": "The §4.1 summary table now claims the refit baselines reach 0.712 local recall, a figure that exists in no artifact and was never measured, while §4.1's placeholder cells are never parsed and no check requires that number to appear.",
+    "expects": "pass"
+  },
+  {
+    "name": "duplicate-row-shadowing",
+    "file": "polar-projector-paper.md",
+    "line": 1187,
+    "old": "| \\( 10^{-3} \\) | \\( 1.2 \\times 10^{-14} \\) | \\( 1.1 \\times 10^{-10} \\) |",
+    "new": "| \\( 10^{-3} \\) | \\( 1.2 \\times 10^{-2} \\) | \\( 1.1 \\times 10^{-10} \\) |\n| \\( 10^{-3} \\) | \\( 1.2 \\times 10^{-14} \\) | \\( 1.1 \\times 10^{-10} \\) |",
+    "why": "The printed Appendix B table now carries a row claiming the vector form's relative error is 1.2e-2 at d_esc/||r|| = 1e-3, contradicting the appendix's central claim, while the table parser keys rows by the ratio column and keeps the last row per key, so only the genuine row underneath is validated.",
+    "expects": "pass"
+  },
+  {
+    "name": "non-positional-presence",
+    "file": "polar-projector-paper.md",
+    "line": 59,
+    "old": "29×, from 0.019 to 0.543",
+    "new": "129×, from 0.019 to 0.543",
+    "why": "The abstract now claims a 129× gain where the measurement is 29×, because the presence check only requires the two-character string \"29\" to occur somewhere in the paper and it still occurs in the \"29% of the whole call\" sentence in Appendix A.",
+    "expects": "pass"
+  },
+  {
+    "name": "cell-value-permutation",
+    "file": "polar-projector-paper.md",
+    "line": 732,
+    "old": "**0.543** | **0.567**",
+    "new": "**0.567** | **0.543**",
+    "why": "The paper's headline re-anchoring row now reports a mean local recall of 0.567 and a median of 0.543, the reverse of the measured statistics, while both numbers still occur elsewhere in the manuscript and no check parses this table's cells.",
+    "expects": "pass"
+  },
+  {
+    "name": "unchecked-derivation",
+    "file": "polar-projector-paper.md",
+    "line": 724,
+    "old": "15/2220",
+    "new": "15/222",
+    "why": "The chance level's derivation is now wrong by a factor of ten, so the paper's stated chance floor for local recall@15 is off, while the checked value 0.0068 is still printed and the arithmetic around it is never recomputed.",
+    "expects": "pass"
+  }
+]
+```
