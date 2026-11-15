@@ -81,12 +81,19 @@ def edits_of(part: str, conversation: int, items: list[dict]) -> list[dict]:
             for k, item in enumerate(items, start=1)]
 
 
-def read_responses(folder: Path = RESPONSES) -> list[dict]:
+def read_responses(folder: Path = RESPONSES, unreadable: list | None = None) -> list[dict]:
+    """The edits of every stored response. A response with no JSON list gives no edit: its file
+    name is added to `unreadable`, and it is not repaired."""
     out = []
     for f in sorted(p for p in folder.iterdir() if p.is_file() and not p.name.startswith(".")):
         part, conversation = part_of(f.name)
-        out += [dict(e, response=f.name)
-                for e in edits_of(part, conversation, parse_response(f.read_text(encoding="utf-8")))]
+        try:
+            items = parse_response(f.read_text(encoding="utf-8"))
+        except ValueError:
+            if unreadable is not None:
+                unreadable.append(f.name)
+            continue
+        out += [dict(e, response=f.name) for e in edits_of(part, conversation, items)]
     ids = [e["edit_id"] for e in out]
     if len(ids) != len(set(ids)):
         raise ValueError("two response files give the same part and conversation")
@@ -232,10 +239,13 @@ def _stratum(case, strata: dict, line: int, start_col: int, end_col: int) -> str
 
 
 def cmd_list(_args) -> None:
-    edits = read_responses()
+    unreadable: list[str] = []
+    edits = read_responses(unreadable=unreadable)
     EDITS.write_text("".join(json.dumps(e, ensure_ascii=False) + "\n" for e in edits), encoding="utf-8")
     for part in PARTS:
         print(f"{part}: {sum(e['part'] == part for e in edits)} edits")
+    for name in unreadable:
+        print(f"{name}: no JSON list in the response, 0 edits")
     rulings = read_rulings()
     for e in (e for e in edits if e["part"] == "R2"):
         print(json.dumps({k: e.get(k) for k in ("edit_id", "name", "file", "line", "old", "new", "why")},

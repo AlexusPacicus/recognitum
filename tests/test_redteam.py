@@ -193,3 +193,13 @@ def test_rows_use_the_columns_of_the_results_file():
     assert row["source"] == "red team" and row["class"] == "R1" and row["status"] == "invalid"
     assert row["valid"] is False and row["invalid_reason"] == "on a heading" and row["expected"] == "block"
     assert json.dumps(row)
+
+
+def test_a_response_with_no_list_gives_no_edit_and_is_named_not_repaired(tmp_path):
+    (tmp_path / "R1-1-m-2026-11-15.txt").write_text('[{"line": 1, "old": "a", "new": "b"}]', encoding="utf-8")
+    (tmp_path / "R1-2-m-2026-11-15.txt").write_text("I cannot help with that.", encoding="utf-8")
+    (tmp_path / "R1-3-m-2026-11-15.txt").write_text("", encoding="utf-8")
+    unreadable = []
+    edits = rt.read_responses(tmp_path, unreadable)
+    assert [e["edit_id"] for e in edits] == ["R1-1-01"]
+    assert unreadable == ["R1-2-m-2026-11-15.txt", "R1-3-m-2026-11-15.txt"]
