@@ -38,6 +38,11 @@ def test_parse_a_list_with_prose_around_and_no_fence():
     assert rt.parse_response('Sure. [{"line": 1}] Hope it helps [1].') == [{"line": 1}]
 
 
+def test_brackets_in_the_prose_before_the_list_do_not_hide_it():
+    text = 'Let me read toy.md [offset=850, limit=1] and note [1].\nHere: [{"line": 2}]\n'
+    assert rt.parse_response(text) == [{"line": 2}]
+
+
 def test_a_response_with_no_list_is_an_error_not_an_empty_list():
     with pytest.raises(ValueError):
         rt.parse_response("I cannot help with that.")

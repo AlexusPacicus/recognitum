@@ -48,25 +48,25 @@ class DoesNotApply(Exception):
 
 
 def parse_response(text: str) -> list[dict]:
-    """The JSON list of a response as returned: bare, in a fenced block, or with prose around."""
-    candidates = [text.strip()]
-    candidates += [m.group(1) for m in re.finditer(r"```(?:json)?\s*\n(.*?)```", text, re.S)]
+    """The JSON list of a response as returned: bare, in a fenced block, or with prose around.
+
+    The client prints what the model says while it works, before its answer, so the text may hold
+    other brackets. The list is the last JSON list of objects in the text that is not inside
+    another one: an answer given twice counts as its last version."""
     decoder = json.JSONDecoder()
-    for start in (m.start() for m in re.finditer(r"\[", text)):
+    found, k = [], 0
+    while (k := text.find("[", k)) != -1:
         try:
-            value, _ = decoder.raw_decode(text[start:])
+            value, length = decoder.raw_decode(text[k:])
         except ValueError:
+            k += 1
             continue
-        candidates.append(json.dumps(value))
-        break
-    for c in candidates:
-        try:
-            value = json.loads(c)
-        except ValueError:
-            continue
-        if isinstance(value, list) and all(isinstance(x, dict) for x in value) and value:
-            return value
-    raise ValueError("no JSON list of objects in the response")
+        if isinstance(value, list) and value and all(isinstance(x, dict) for x in value):
+            found.append(value)
+        k += length
+    if not found:
+        raise ValueError("no JSON list of objects in the response")
+    return found[-1]
 
 
 def part_of(name: str) -> tuple[str, int]:

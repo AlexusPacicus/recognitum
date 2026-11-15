@@ -12,13 +12,15 @@
         "webfetch": false,
         "websearch": false,
         "task": false,
-        "todowrite": false
+        "todowrite": false,
+        "skill": false
       },
       "permission": {
         "bash": "deny",
         "edit": "deny",
         "webfetch": "deny",
-        "external_directory": "deny"
+        "external_directory": "deny",
+        "skill": "deny"
       }
     }
   }

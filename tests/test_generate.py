@@ -91,9 +91,10 @@ def test_a_conversation_sees_two_files_and_its_output_is_stored_as_returned(tmp_
 def test_the_agent_only_reads():
     config = json.loads(gen.CONFIG.read_text(encoding="utf-8"))
     agent = config["agent"][gen.AGENT]
-    for tool in ("bash", "edit", "write", "webfetch", "task"):
+    # `skill`: in the probe the model loaded the skills of the author's own configuration.
+    for tool in ("bash", "edit", "write", "webfetch", "task", "skill"):
         assert agent["tools"][tool] is False
-    for what in ("bash", "edit", "webfetch", "external_directory"):
+    for what in ("bash", "edit", "webfetch", "external_directory", "skill"):
         assert agent["permission"][what] == "deny"
     assert "prompt" not in agent  # nothing is said to the model besides the prompt of the protocol
 
