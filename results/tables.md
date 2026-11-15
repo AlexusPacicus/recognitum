@@ -2,7 +2,7 @@
 
 Written by `analysis/analyze.py` from `results/mutants.csv`. Not edited by hand.
 
-Lines read: 827; mutants drawn by code: 747; edits of the red team: 40; repeated lines: 40.
+Lines read: 832; mutants drawn by code: 747; edits of the red team: 45; repeated lines: 40.
 
 ## Mutants by class (section 7)
 
@@ -18,6 +18,7 @@ Lines read: 827; mutants drawn by code: 747; edits of the red team: 40; repeated
 | B1 | 50 | 50 | 0 | 0 | 0 | 12 | 2d8724a | 0e109781f03f |
 | R1 | 30 | 30 | 0 | 0 | 0 | 0 | 8dfcfec | 0e109781f03f |
 | R2 | 10 | 10 | 0 | 0 | 0 | 0 | 4a9408f | 0e109781f03f |
+| R3, not pre-registered | 5 | 4 | 1 | 0 | 0 | 0 | a757b81 | 0e109781f03f |
 
 ## Q1. Figure places and distinct strings
 
@@ -137,6 +138,8 @@ Parts R1 and R3 by the stratum of the figure place the edit touches. The edits a
 | R1 | all | 30 | 0 | 0/30 | 0/30 | — | open | yes |
 | R1 | repeated | 15 | 0 | 0/15 | 0/15 | — | open | yes |
 | R1 | no figure place | 15 | 0 | 0/15 | 0/15 | — | open | yes |
+| R3, not pre-registered | all | 4 | 1 | 0/4 | 0/4 | — | open | yes |
+| R3, not pre-registered | repeated | 4 | 0 | 0/4 | 0/4 | — | open | yes |
 
 ### Count check
 
@@ -145,6 +148,8 @@ Parts R1 and R3 by the stratum of the figure place the edit touches. The edits a
 | R1 | all | 30 | 0 | 17/30 | 0/30 | — | partial | yes | measured |
 | R1 | repeated | 15 | 0 | 14/15 | 0/15 | — | partial | yes | measured |
 | R1 | no figure place | 15 | 0 | 3/15 | 0/15 | — | partial | yes | measured |
+| R3, not pre-registered | all | 4 | 1 | 3/4 | 0/4 | — | partial | yes | measured |
+| R3, not pre-registered | repeated | 4 | 0 | 3/4 | 0/4 | — | partial | yes | measured |
 
 ### At least one of the two
 
@@ -153,10 +158,14 @@ Parts R1 and R3 by the stratum of the figure place the edit touches. The edits a
 | R1 | all | 30 | 0 | 17/30 | 0/30 | — | partial | yes |
 | R1 | repeated | 15 | 0 | 14/15 | 0/15 | — | partial | yes |
 | R1 | no figure place | 15 | 0 | 3/15 | 0/15 | — | partial | yes |
+| R3, not pre-registered | all | 4 | 1 | 3/4 | 0/4 | — | partial | yes |
+| R3, not pre-registered | repeated | 4 | 0 | 3/4 | 0/4 | — | partial | yes |
 
 ### Invalid edits of parts R1 and R3
 
-None.
+| Edit | Part | Why it is invalid |
+|---|---|---|
+| R3-1-05 | R3, not pre-registered | `old` appears 0 times on the line |
 
 ### Part R2, one line per edit
 

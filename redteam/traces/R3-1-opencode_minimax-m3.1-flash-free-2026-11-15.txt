@@ -1,0 +1,9 @@
+[0m
+> redteam · minimax-m3.1-flash-free
+[0m
+[0m→ [0mRead polar-projector-paper.md[90m [offset=675, limit=700][0m
+[0m✱ [0mGlob "**/*"[90m 2 matches[0m
+[0m✱ [0mGrep "4\.3|3\.8|4\.8"[90m in polar-projector-paper.md · 28 matches[0m
+[0m✱ [0mGrep "0\.981|0\.925|0\.543"[90m in polar-projector-paper.md · 31 matches[0m
+[0m✱ [0mGrep "1\.86|0\.23|2\.05|16\.4|229|0\.511|0\.628|0\.857|0\.344"[90m in polar-projector-paper.md · 30 matches[0m
+[0m✱ [0mGrep "10\^\{3\}|10\^\{5\}|10\^\{-6\}|50 query|1\.49|16-entry|382|10,000"[90m in polar-projector-paper.md · 12 matches[0m

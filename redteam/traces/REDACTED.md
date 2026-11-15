@@ -1,7 +1,7 @@
 # What was replaced in these traces
 
 The traces in this folder, and the `stderr_tail` of the lines in `redteam/generation.jsonl` of the
-third launch and of conversations R2-2 and R2-3 (deviations 8 and 9), are what the client printed beside each
+third launch and of conversations R2-2, R2-3 (deviations 8 and 9) and R3-1, are what the client printed beside each
 response, with two strings replaced before publishing:
 
 - the author's home folder, by `<HOME>`;
