@@ -1,0 +1,10 @@
+[0m
+> redteam · minimax-m3.1-flash-free
+[0m
+[0m→ [0mRead .
+[0m→ [0mRead polar-projector-paper.md[90m [offset=675, limit=420][0m
+[0m→ [0mRead polar-projector-paper.md[90m [offset=1095, limit=160][0m
+[0m✱ [0mGrep "1\.49|\| 8192 \|"[90m in polar-projector-paper.md · 2 matches[0m
+[0m✱ [0mGrep "50 query chunks|prepare\(\) — per stimulus, prepared frame|UMAP, fit once|batches of 250|5\.65|0\.056 \|"[90m in polar-projector-paper.md · 8 matches[0m
+[0m→ [0mRead polar-projector-paper.md[90m [offset=420, limit=14][0m
+[0m✱ [0mGrep "4\.66|0\.056|7/7"[90m in polar-projector-paper.md · 16 matches[0m

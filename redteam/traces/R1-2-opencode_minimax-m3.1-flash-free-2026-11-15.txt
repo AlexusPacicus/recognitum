@@ -1,0 +1,9 @@
+[0m
+> redteam · minimax-m3.1-flash-free
+[0m
+[0m→ [0mRead polar-projector-paper.md[90m [offset=675, limit=400][0m
+[0m✱ [0mGlob "**/*.py"[90m 1 match[0m
+[0m→ [0mRead polar-projector-paper.md[90m [offset=1075, limit=200][0m
+[0m→ [0mRead .
+[0m✱ [0mGrep "0\.543"[90m in polar-projector-paper.md · 14 matches[0m
+[0m✱ [0mGrep "0\.31|1\.52|50 query chunks|0\.567|10\^\{5\}|10\^\{3\}"[90m in polar-projector-paper.md · 16 matches[0m

@@ -1,0 +1,14 @@
+[0m
+> redteam · minimax-m3.1-flash-free
+[0m
+[0m✱ [0mGlob "**/*"[90m in . · 2 matches[0m
+[0m→ [0mRead polar-projector-paper.md[90m [offset=675, limit=400][0m
+[0m→ [0mRead polar-projector-paper.md[90m [offset=1075, limit=200][0m
+[0m✱ [0mGrep "4\.66"[90m in polar-projector-paper.md · 7 matches[0m
+[0m✱ [0mGrep "0\.543"[90m in polar-projector-paper.md · 14 matches[0m
+[0m✱ [0mGrep "\b90\b|\b50\b|16-entry|K = 16|\b15\b|60 Hz"[90m in polar-projector-paper.md · 45 matches[0m
+[0m✱ [0mGrep "0\.5535|0\.6639|0\.6811|11\.39|0\.019|1\.57"[90m in polar-projector-paper.md · 35 matches[0m
+[0m→ [0mRead polar-projector-paper.md[90m [offset=784, limit=30][0m
+[0m✱ [0mGrep "0\.344 at|locates its 0\.543|50 query chunks|Trustworthiness \(\\k = 15"[90m in polar-projector-paper.md · 3 matches[0m
+[0m→ [0mRead polar-projector-paper.md[90m [offset=504, limit=14][0m
+[0m→ [0mRead polar-projector-paper.md[90m [offset=420, limit=12][0m

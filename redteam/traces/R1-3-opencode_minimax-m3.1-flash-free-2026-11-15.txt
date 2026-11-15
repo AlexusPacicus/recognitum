@@ -1,0 +1,8 @@
+[0m
+> redteam · minimax-m3.1-flash-free
+[0m
+[0m✱ [0mGlob "**/*"[90m in . · 2 matches[0m
+[0m→ [0mRead polar-projector-paper.md[90m [offset=675, limit=400][0m
+[0m→ [0mRead polar-projector-paper.md[90m [offset=1075, limit=180][0m
+[0m✱ [0mGrep "1\.4|recall@15|16\.4"[90m in polar-projector-paper.md · 39 matches[0m
+[0m✱ [0mGrep "Trustworthiness \(\\?\( ?k = 15|50 query chunks|16-entry codebook|its 100 neighbours|229× less than"[90m in polar-projector-paper.md · 5 matches[0m

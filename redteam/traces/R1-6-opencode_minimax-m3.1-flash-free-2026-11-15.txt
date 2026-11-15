@@ -1,0 +1,8 @@
+[0m
+> redteam · minimax-m3.1-flash-free
+[0m
+[0m→ [0mRead .
+[0m→ [0mRead polar-projector-paper.md[90m [offset=675, limit=400][0m
+[0m→ [0mRead polar-projector-paper.md[90m [offset=1075, limit=180][0m
+[0m✱ [0mGrep "382|0\.25|534"[90m in verify_paper_tables.py · 8 matches[0m
+[0m✱ [0mGrep "50 query chunks|0\.25, 0\.5|382 dimensions|\| 534 \||24× the floating-point"[90m in polar-projector-paper.md · 5 matches[0m
