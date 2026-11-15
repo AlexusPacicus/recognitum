@@ -2,7 +2,7 @@
 
 Written by `analysis/analyze.py` from `results/mutants.csv`. Not edited by hand.
 
-Lines read: 817; mutants drawn by code: 747; edits of the red team: 30; repeated lines: 40.
+Lines read: 827; mutants drawn by code: 747; edits of the red team: 40; repeated lines: 40.
 
 ## Mutants by class (section 7)
 
@@ -17,6 +17,7 @@ Lines read: 817; mutants drawn by code: 747; edits of the red team: 30; repeated
 | M7 | 36 | 36 | 0 | 0 | 0 | 0 | 2d8724a, a44cae4 | 0e109781f03f |
 | B1 | 50 | 50 | 0 | 0 | 0 | 12 | 2d8724a | 0e109781f03f |
 | R1 | 30 | 30 | 0 | 0 | 0 | 0 | 8dfcfec | 0e109781f03f |
+| R2 | 10 | 10 | 0 | 0 | 0 | 0 | 4a9408f | 0e109781f03f |
 
 ## Q1. Figure places and distinct strings
 
@@ -159,7 +160,18 @@ None.
 
 ### Part R2, one line per edit
 
-No edit of part R2.
+| Edit | Name of the attack | The author rules it | The model expected | Verifier | Count check | Validity |
+|---|---|---|---|---|---|---|
+| R2-3-01 | one-character-figure-exemption | false | pass | passed | passed | valid |
+| R2-3-02 | unit-header-relabel | false | pass | passed | passed | valid |
+| R2-3-03 | prose-comparison-flip | false | pass | passed | passed | valid |
+| R2-3-04 | figure-caption-falsification | false | pass | passed | blocked by a check | valid |
+| R2-3-05 | unregistered-parameter-edit | false | pass | passed | passed | valid |
+| R2-3-06 | unchecked-placeholder-fill | false | pass | passed | passed | valid |
+| R2-3-07 | duplicate-row-shadowing | false | pass | passed | passed | valid |
+| R2-3-08 | non-positional-presence | false | pass | passed | blocked by a check | valid |
+| R2-3-09 | cell-value-permutation | false | pass | passed | passed | valid |
+| R2-3-10 | unchecked-derivation | false | pass | passed | passed | valid |
 
 ## Collisions, apart
 
