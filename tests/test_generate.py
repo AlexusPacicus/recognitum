@@ -24,6 +24,10 @@ print("attached-absolute-in-folder:" + str(len(attached) == 2 and all(
 print("pwd-is-folder:" + str(os.path.realpath(os.environ.get("PWD", "")) == here))
 print("dir-is-the-real-path:" + str("--dir" in sys.argv and sys.argv[sys.argv.index("--dir") + 1] == here))
 print("config:" + os.path.basename(os.environ.get("OPENCODE_CONFIG", "none")))
+tmp = os.path.realpath(os.environ.get("TMPDIR", ""))
+print("own-empty-tmp:" + str(os.path.isdir(tmp) and os.listdir(tmp) == [] and tmp != here
+                             and not here.startswith(tmp + os.sep)
+                             and os.path.basename(tmp).startswith("redteam-tmp-")))
 print("dir-is-folder:" + str(os.path.realpath(sys.argv[sys.argv.index("--dir") + 1]) == here
                              if "--dir" in sys.argv else False))
 print('[{{"line": 1, "old": "a", "new": "b", "why": "w"}}]')
@@ -83,6 +87,9 @@ def test_a_conversation_sees_two_files_and_its_output_is_stored_as_returned(tmp_
     # and the agent is one that only reads.
     assert "dir-is-the-real-path:True" in text
     assert "--agent|redteam" in text and "config:opencode.json" in text
+    # The client lets its agents read its own temporary directory, which held a package of the
+    # blind review and two scripts a model wrote in the second launch. Each call gets an empty one.
+    assert "own-empty-tmp:True" in text
     assert "--pure" in text and "prov/some-model" in text and "--auto" not in text
     assert rt.parse_response(text) == [{"line": 1, "old": "a", "new": "b", "why": "w"}]
     assert len(rt.read_responses(setup["responses"])) == 7

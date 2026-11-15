@@ -28,6 +28,7 @@ import datetime as dt
 import hashlib
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -84,17 +85,22 @@ def command(client: str, model: str, conversation_id: str, prompt: str, names: l
 
 def _call(client: str, model: str, title: str, prompt: str, contents: dict[str, bytes], timeout) -> dict:
     """One call of the client in a new folder that holds `contents` and nothing else."""
-    with tempfile.TemporaryDirectory(prefix="redteam-") as tmp:
+    with tempfile.TemporaryDirectory(prefix="redteam-") as tmp, \
+            tempfile.TemporaryDirectory(prefix="redteam-tmp-") as scratch:
         # The real path: the client takes a folder reached through a symbolic link for a directory
         # outside its project, and rejects the reads of the model there (the second launch).
         folder = Path(tmp).resolve()
+        # The client lets its agents read its own temporary directory. The shared one held a package
+        # of the blind review, so each call gets an empty one of its own.
+        scratch = Path(scratch).resolve()
         for name, data in contents.items():
             (folder / name).write_bytes(data)
         before = {name: _sha(data) for name, data in contents.items()}
         started = _now()
         try:
             p = subprocess.run(command(client, model, title, prompt, sorted(before), str(folder)),
-                               cwd=folder, env=dict(os.environ, PWD=str(folder), OPENCODE_CONFIG=str(CONFIG)),
+                               cwd=folder, env=dict(os.environ, PWD=str(folder), TMPDIR=str(scratch),
+                                                    OPENCODE_CONFIG=str(CONFIG)),
                                stdin=subprocess.DEVNULL, capture_output=True, timeout=timeout)
             out, err, code = p.stdout, p.stderr, p.returncode
         except subprocess.TimeoutExpired as exc:
@@ -103,12 +109,13 @@ def _call(client: str, model: str, title: str, prompt: str, contents: dict[str, 
         after = sorted(x.relative_to(folder).as_posix() for x in folder.rglob("*") if x.is_file())
         unchanged = all((folder / n).is_file() and _sha((folder / n).read_bytes()) == h
                         for n, h in before.items())
+        tmp_after = sorted(x.relative_to(scratch).as_posix() for x in scratch.rglob("*") if x.is_file())
     return {"out": out, "err": err,
             "record": {"model": model, "client": Path(client).name, "agent": AGENT,
                        "config_sha256": _sha(CONFIG.read_bytes()), "started": started, "ended": ended,
                        "exit": code, "prompt_sha256": _sha(prompt.encode("utf-8")),
                        "inputs_sha256": before, "inputs_unchanged": unchanged, "files_after": after,
-                       "response_sha256": _sha(out), "stderr_sha256": _sha(err),
+                       "tmp_files_after": tmp_after, "response_sha256": _sha(out), "stderr_sha256": _sha(err),
                        "stderr_tail": err.decode("utf-8", "replace")[-600:]}}
 
 
@@ -186,6 +193,14 @@ def main(argv=None) -> None:
     if args.which == "probe":
         r = probe(client=client, model=args.model, out=PROBES, timeout=args.timeout)
         print(f"exit={r['exit']} files afterwards: {r['files_after']}")
+        print(f"files in its temporary directory afterwards: {r['tmp_files_after']}")
+        trace = (PROBES / r["response"].replace(".txt", ".stderr.txt")).read_text(encoding="utf-8",
+                                                                                  errors="replace")
+        print("tools the model called:", sorted(set(re.findall(r"^[→✱✗$] ?(\w+)", trace, re.M))))
+        print("directories outside its folder that the client lets it read:")
+        for p in sorted(set(re.findall(r'"external_directory","pattern":"([^"]+)","action":"allow"', trace))
+                        | set(re.findall(r'"pattern":"([^"]+)","action":"allow"', trace))):
+            print("   ", p)
         print(f"--- what the model answered (redteam/probes/{r['response']}):")
         print((PROBES / r["response"]).read_text(encoding="utf-8", errors="replace"))
         print("--- what the client printed beside it:")
