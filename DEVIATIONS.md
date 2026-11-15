@@ -227,3 +227,39 @@ fail, Q3 is reported with what they gave. The same holds for part R3, run after 
 
 **What the report says:** that the red team was generated at the third attempt, why, and that a
 rule written after the first failure was broken after the second.
+
+## 8. Part R2 returned nothing, and is asked once more
+
+**Written:** 15 November 2026, 14:35 CET. Part R1 of the third launch has run through both
+detectors, and its results are known to the author and the agent (commit `7d23f21`). No edit of
+part R2 exists.
+
+**What deviation 7 says:** the third launch is not run again, whatever it returns; if its
+conversations fail, Q3 is reported with what they gave. **This deviation breaks that sentence for
+part R2.** It is the author's decision.
+
+**What happened:** the R2 conversation of the third launch ended with exit code 0 and an empty
+response. Its trace shows four tool calls: the model listed its folder, read part of the
+manuscript, and twice tried to read the folder above its own, which the client refused. Then the
+conversation ended with no answer.
+
+**Why, in the author's judgement:** the prompt of R2 says the error may be in any file the program
+reads, and the model is given two files. The author reads the empty response as a failure of the
+context given to the model, not as a result about the verifier, and does not want Q3 to lose part
+R2 to it.
+
+**What the agent adds:** the record does not show why the conversation ended. The same harness may
+return nothing again, and nothing in it is changed: the model is still given two files and nothing
+else, as section 4 says.
+
+**What is done:** the prompt of R2 is sent once more, as conversation R2-2, with the same model,
+files and harness. It is one more asking, not a replacement:
+
+- the first response stays in `redteam/responses` as returned, and is reported as empty;
+- the edits of R2-2, if any, are those of part R2; the author rules on each before either detector
+  runs on any of them, as section 4 says;
+- the report says that part R2 was asked twice, and that the second asking was decided after the
+  results of part R1 were known.
+
+**From here on:** R2-2 is the last asking of part R2. If it returns nothing, part R2 is reported as
+empty.

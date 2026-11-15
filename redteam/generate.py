@@ -59,6 +59,8 @@ def plan(which: str) -> list[dict]:
         return [{"id": f"R1-{k}", "part": "R1"} for k in range(1, 7)] + [{"id": "R2-1", "part": "R2"}]
     if which == "R3":
         return [{"id": "R3-1", "part": "R3"}]
+    if which == "R2-again":  # deviation 8: once, after R2-1 returned nothing
+        return [{"id": "R2-2", "part": "R2"}]
     raise ValueError(which)
 
 
@@ -189,6 +191,8 @@ def generate(which: str, *, client: str, model: str, date: str, files, prompts, 
     again = sorted(c["id"] for c in convs if c["id"] in existing)
     if again:
         raise SystemExit(f"already generated, and nothing is run twice: {', '.join(again)}")
+    if which == "R2-again" and "R2-1" not in existing:
+        raise SystemExit("R2-2 is a second asking: R2-1 has not been generated")
     if which == "R3" and require_main:
         lacking = sorted(c["id"] for c in plan("main") if c["id"] not in existing)
         if lacking:
@@ -202,7 +206,7 @@ def generate(which: str, *, client: str, model: str, date: str, files, prompts, 
 
 def main(argv=None) -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("which", choices=["main", "R3", "probe"])
+    ap.add_argument("which", choices=["main", "R3", "R2-again", "probe"])
     ap.add_argument("--model", required=True, help="as the client names it: provider/model")
     ap.add_argument("--client", default="opencode")
     ap.add_argument("--jobs", type=int, default=7, help="conversations at the same time")

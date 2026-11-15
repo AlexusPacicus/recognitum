@@ -179,6 +179,23 @@ def test_a_failed_conversation_is_stored_and_not_retried(tmp_path, setup):
     assert (setup["responses"] / records[0]["response"]).exists()
 
 
+def test_r2_can_be_asked_once_more_and_the_first_response_stays(tmp_path, setup):
+    """Deviation 8: the R2 conversation of the third launch returned nothing; it is asked again once,
+    as conversation R2-2, and the first response is kept and read with it."""
+    assert [c["id"] for c in gen.plan("R2-again")] == ["R2-2"]
+    with pytest.raises(SystemExit, match="R2-1"):
+        gen.generate("R2-again", client=client(tmp_path), jobs=1, **setup)
+    gen.generate("main", client=client(tmp_path), jobs=4, **setup)
+    first = next(p for p in setup["responses"].iterdir() if p.name.startswith("R2-1-"))
+    before = first.read_bytes()
+    records = gen.generate("R2-again", client=client(tmp_path), jobs=1, **setup)
+    assert records[0]["id"] == "R2-2" and records[0]["prompt_file"] == "R2.txt"
+    assert first.read_bytes() == before
+    assert rt.part_of(records[0]["response"]) == ("R2", 2)
+    with pytest.raises(SystemExit, match="already"):
+        gen.generate("R2-again", client=client(tmp_path), jobs=1, **setup)
+
+
 def test_r3_runs_only_after_the_seven(tmp_path, setup):
     with pytest.raises(SystemExit, match="R3 runs after"):
         gen.generate("R3", client=client(tmp_path), jobs=1, **setup)
