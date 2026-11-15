@@ -3,6 +3,8 @@
     python redteam/generate.py main --model PROVIDER/MODEL   # R1-1 to R1-6 and R2, at the same time
     python redteam/generate.py R3 --model PROVIDER/MODEL     # deviation 2: only after the seven
     python redteam/generate.py main --model PROVIDER/MODEL --dry-run   # prints the commands, calls nothing
+    python redteam/generate.py R2-third --model PROVIDER/MODEL --output-max 512000 --timeout 10800
+                                                             # deviation 9: R2-3, once
 
     python redteam/generate.py probe --model PROVIDER/MODEL  # a toy file: what the agent can do
 
@@ -61,7 +63,16 @@ def plan(which: str) -> list[dict]:
         return [{"id": "R3-1", "part": "R3"}]
     if which == "R2-again":  # deviation 8: once, after R2-1 returned nothing
         return [{"id": "R2-2", "part": "R2"}]
+    if which == "R2-third":  # deviation 9: once, with the output cap of the model
+        return [{"id": "R2-3", "part": "R2"}]
     raise ValueError(which)
+
+
+# Deviation 9: the client caps a reply at min(the model's output limit, 32000) unless this variable
+# is set; R2-1 and R2-2 spent the 32000 on reasoning and ended on `length` with no text. The
+# catalogue of the client gives minimax-m3.1-flash-free an output limit of 512000.
+OUTPUT_MAX_VAR = "OPENCODE_EXPERIMENTAL_OUTPUT_TOKEN_MAX"
+R2_THIRD_OUTPUT_MAX = 512000
 
 
 def response_name(conversation_id: str, model: str, date: str) -> str:
@@ -102,7 +113,7 @@ def check_runs(runs: Path) -> Path:
 
 
 def _call(client: str, model: str, title: str, prompt: str, contents: dict[str, bytes], timeout,
-          runs: Path) -> dict:
+          runs: Path, output_max: int | None = None) -> dict:
     """One call of the client, in a session folder of its own that is kept afterwards:
     `work`, which holds `contents` and nothing else, and `tmp`, empty, its temporary directory."""
     # Real paths: the client takes a folder reached through a symbolic link for a directory outside
@@ -116,11 +127,14 @@ def _call(client: str, model: str, title: str, prompt: str, contents: dict[str, 
     for name, data in contents.items():
         (folder / name).write_bytes(data)
     before = {name: _sha(data) for name, data in contents.items()}
+    env = dict(os.environ, PWD=str(folder), TMPDIR=str(scratch), OPENCODE_CONFIG=str(CONFIG))
+    env.pop(OUTPUT_MAX_VAR, None)  # the cap is the one given here, or the client's own: never inherited
+    if output_max is not None:
+        env[OUTPUT_MAX_VAR] = str(output_max)
     started = _now()
     try:
         p = subprocess.run(command(client, model, title, prompt, sorted(before), str(folder)),
-                           cwd=folder, env=dict(os.environ, PWD=str(folder), TMPDIR=str(scratch),
-                                                OPENCODE_CONFIG=str(CONFIG)),
+                           cwd=folder, env=env,
                            stdin=subprocess.DEVNULL, capture_output=True, timeout=timeout)
         out, err, code = p.stdout, p.stderr, p.returncode
     except subprocess.TimeoutExpired as exc:
@@ -132,19 +146,21 @@ def _call(client: str, model: str, title: str, prompt: str, contents: dict[str, 
     tmp_after = sorted(x.relative_to(scratch).as_posix() for x in scratch.rglob("*") if x.is_file())
     return {"out": out, "err": err,
             "record": {"model": model, "client": Path(client).name, "agent": AGENT, "session": session.name,
-                       "config_sha256": _sha(CONFIG.read_bytes()), "started": started, "ended": ended,
+                       "config_sha256": _sha(CONFIG.read_bytes()), "output_token_max": output_max,
+                       "timeout": timeout, "started": started, "ended": ended,
                        "exit": code, "prompt_sha256": _sha(prompt.encode("utf-8")),
                        "inputs_sha256": before, "inputs_unchanged": unchanged, "files_after": after,
                        "tmp_files_after": tmp_after, "response_sha256": _sha(out), "stderr_sha256": _sha(err),
                        "stderr_tail": err.decode("utf-8", "replace")[-600:]}}
 
 
-def _one(conv: dict, *, client, model, date, files, prompts, responses, log, version, timeout, runs) -> dict:
+def _one(conv: dict, *, client, model, date, files, prompts, responses, log, version, timeout, runs,
+         output_max) -> dict:
     prompt_file = Path(prompts) / f"{conv['part']}.txt"
     prompt = prompt_file.read_text(encoding="utf-8").strip()
     name = response_name(conv["id"], model, date)
     done = _call(client, model, conv["id"], prompt, {Path(f).name: Path(f).read_bytes() for f in files}, timeout,
-                 runs)
+                 runs, output_max)
     (Path(responses) / name).write_bytes(done["out"])
     # What the client printed beside the response: the tools the model called and what they gave.
     traces = Path(log).parent / "traces"
@@ -181,7 +197,8 @@ def probe(*, client: str, model: str, out: Path, runs: Path, timeout: float = 60
 
 
 def generate(which: str, *, client: str, model: str, date: str, files, prompts, responses, log, runs,
-             jobs: int = 7, timeout: float = 1800, require_main: bool = True) -> list[dict]:
+             jobs: int = 7, timeout: float = 1800, require_main: bool = True,
+             output_max: int | None = None) -> list[dict]:
     runs = check_runs(runs)
     responses = Path(responses)
     responses.mkdir(parents=True, exist_ok=True)
@@ -193,24 +210,31 @@ def generate(which: str, *, client: str, model: str, date: str, files, prompts, 
         raise SystemExit(f"already generated, and nothing is run twice: {', '.join(again)}")
     if which == "R2-again" and "R2-1" not in existing:
         raise SystemExit("R2-2 is a second asking: R2-1 has not been generated")
+    if which == "R2-third":
+        if "R2-2" not in existing:
+            raise SystemExit("R2-3 is a third asking: R2-2 has not been generated")
+        if output_max != R2_THIRD_OUTPUT_MAX:
+            raise SystemExit(f"R2-3 runs with --output-max {R2_THIRD_OUTPUT_MAX} (deviation 9), not {output_max}")
     if which == "R3" and require_main:
         lacking = sorted(c["id"] for c in plan("main") if c["id"] not in existing)
         if lacking:
             raise SystemExit(f"R3 runs after the seven conversations of section 4; missing: {', '.join(lacking)}")
     version = subprocess.run([client, "--version"], capture_output=True, text=True).stdout.strip()
     kw = dict(client=client, model=model, date=date, files=files, prompts=prompts, responses=responses,
-              log=log, version=version, timeout=timeout, runs=runs)
+              log=log, version=version, timeout=timeout, runs=runs, output_max=output_max)
     with ThreadPoolExecutor(max_workers=max(1, jobs)) as pool:
         return list(pool.map(lambda c: _one(c, **kw), convs))
 
 
 def main(argv=None) -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("which", choices=["main", "R3", "R2-again", "probe"])
+    ap.add_argument("which", choices=["main", "R3", "R2-again", "R2-third", "probe"])
     ap.add_argument("--model", required=True, help="as the client names it: provider/model")
     ap.add_argument("--client", default="opencode")
     ap.add_argument("--jobs", type=int, default=7, help="conversations at the same time")
     ap.add_argument("--timeout", type=float, default=1800, help="seconds for one conversation")
+    ap.add_argument("--output-max", type=int, default=None,
+                    help=f"tokens of one reply, reasoning included ({OUTPUT_MAX_VAR}); unset: the client's own cap")
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--runs", default=str(RUNS), help="folder of the sessions, outside any repository")
     args = ap.parse_args(argv)
@@ -242,7 +266,7 @@ def main(argv=None) -> None:
         return
     records = generate(args.which, client=client, model=args.model, date=dt.date.today().isoformat(),
                        files=FILES, prompts=PROMPTS, responses=RESPONSES, log=LOG, jobs=args.jobs,
-                       timeout=args.timeout, runs=Path(args.runs))
+                       timeout=args.timeout, runs=Path(args.runs), output_max=args.output_max)
     for r in records:
         note = "" if r["inputs_unchanged"] and len(r["files_after"]) == len(FILES) else "  WROTE IN ITS FOLDER"
         print(f"{r['id']} exit={r['exit']} -> redteam/responses/{r['response']}{note}")

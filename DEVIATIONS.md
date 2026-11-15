@@ -263,3 +263,57 @@ files and harness. It is one more asking, not a replacement:
 
 **From here on:** R2-2 is the last asking of part R2. If it returns nothing, part R2 is reported as
 empty.
+
+## 9. Part R2 ended on the client's output cap, and is asked a third time with the model's
+
+**Written:** 15 November 2026, 16:17 CET. R2-2 has run and is committed with its record (commit
+`cb45218`). Part R1 has run through both detectors, and its results are known to the author and the
+agent. No edit of part R2 exists.
+
+**What deviation 8 says:** R2-2 is the last asking of part R2; if it returns nothing, part R2 is
+reported as empty. **This deviation breaks that sentence.** It is the author's decision.
+
+**What happened:** R2-2 returned nothing, as R2-1 did. The client's own store of the two sessions
+(`~/.local/share/opencode/opencode.db`, on the author's machine) gives the cause, which neither
+response nor trace showed: the last reply of each ended with `finish = length`, with 31,999 and
+32,000 tokens of reasoning and 1 and 0 tokens of text. The client then exits with code 0 and prints
+nothing. The six conversations of part R1 ended with `finish = stop`, with at most 3,221 tokens of
+reasoning.
+
+**Why the cap was 32,000:** the client caps a reply, reasoning included, at the smaller of the
+output limit its catalogue gives the model and its own maximum, 32,000 unless the variable
+`OPENCODE_EXPERIMENTAL_OUTPUT_TOKEN_MAX` is set. The catalogue gives `minimax-m3.1-flash-free` a
+context of 1,000,000 tokens and an output limit of 512,000. Neither the protocol nor the harness set
+a cap: the 32,000 was the client's default, not a choice.
+
+**What the author judges:** the two empty responses say nothing about the verifier. They are the
+harness cutting the model off before it answered.
+
+**What is changed, for R2-3 only:**
+
+- the variable is set to 512,000, the output limit of the model; the record keeps it in
+  `output_token_max` (`null` for every earlier conversation, which ran with the client's 32,000);
+- the timeout is three hours, 10,800 s, instead of 1,800 s: R2-2 spent its 32,000 tokens in about
+  six and a half minutes, so 512,000 at the same rate would take more than 100 minutes; the record
+  keeps it in `timeout`;
+- the script refuses R2-3 without R2-2, and with any other cap.
+
+The model, the prompt, the two files, the agent and its configuration are the same.
+
+**What is done:** the prompt of R2 is sent once more, as conversation R2-3:
+
+    python redteam/generate.py R2-third --model opencode/minimax-m3.1-flash-free --output-max 512000 --timeout 10800
+
+- R2-1 and R2-2 stay in `redteam/responses` as returned, and are reported as empty, with their
+  cause;
+- the edits of R2-3, if any, are those of part R2; the author rules on each before either detector
+  runs on any of them, as section 4 says;
+- the report says that part R2 was asked three times, that the second and third askings were
+  decided after the results of part R1 were known, and why.
+
+**What this does not settle:** whether the free tier of the provider serves 512,000 tokens is not
+known; only the catalogue says so. If R2-3 ends on `length` again, or on the timeout, part R2 is
+reported as empty, with the cause the client's store gives. Part R3 has not run; whether it runs
+with the same cap is decided by the author before it runs, and written here.
+
+**From here on:** R2-3 is the last asking of part R2.

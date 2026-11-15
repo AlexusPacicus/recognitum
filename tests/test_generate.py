@@ -196,6 +196,42 @@ def test_r2_can_be_asked_once_more_and_the_first_response_stays(tmp_path, setup)
         gen.generate("R2-again", client=client(tmp_path), jobs=1, **setup)
 
 
+ECHO_CAP = 'print("output-max:" + os.environ.get("OPENCODE_EXPERIMENTAL_OUTPUT_TOKEN_MAX", "unset"))'
+
+
+def test_the_client_keeps_its_own_output_cap_unless_one_is_given(tmp_path, setup):
+    """Until deviation 9 no cap was given: the client used its own, 32000 tokens, and the record
+    says so by `null`."""
+    records = gen.generate("R3", client=client(tmp_path, ECHO_CAP), jobs=1, require_main=False, **setup)
+    text = (setup["responses"] / records[0]["response"]).read_text(encoding="utf-8")
+    assert "output-max:unset" in text
+    assert records[0]["output_token_max"] is None and records[0]["timeout"] == 1800
+
+
+def test_r2_is_asked_a_third_time_with_the_output_cap_of_the_model(tmp_path, setup):
+    """Deviation 9: R2-1 and R2-2 ended on `length`, with the 32000 tokens of the client's cap spent
+    on reasoning and no text. R2-3 is asked once, with the cap the catalogue gives the model."""
+    assert [c["id"] for c in gen.plan("R2-third")] == ["R2-3"]
+    assert gen.R2_THIRD_OUTPUT_MAX == 512000
+    stub = client(tmp_path, ECHO_CAP)
+    gen.generate("main", client=stub, jobs=4, **setup)
+    with pytest.raises(SystemExit, match="R2-2"):
+        gen.generate("R2-third", client=stub, jobs=1, output_max=512000, **setup)
+    gen.generate("R2-again", client=stub, jobs=1, **setup)
+    with pytest.raises(SystemExit, match="512000"):
+        gen.generate("R2-third", client=stub, jobs=1, **setup)
+    with pytest.raises(SystemExit, match="512000"):
+        gen.generate("R2-third", client=stub, jobs=1, output_max=32000, **setup)
+    records = gen.generate("R2-third", client=stub, jobs=1, output_max=512000, timeout=10800, **setup)
+    assert records[0]["id"] == "R2-3" and records[0]["prompt_file"] == "R2.txt"
+    assert rt.part_of(records[0]["response"]) == ("R2", 3)
+    text = (setup["responses"] / records[0]["response"]).read_text(encoding="utf-8")
+    assert "output-max:512000" in text
+    assert records[0]["output_token_max"] == 512000 and records[0]["timeout"] == 10800
+    with pytest.raises(SystemExit, match="already"):
+        gen.generate("R2-third", client=stub, jobs=1, output_max=512000, **setup)
+
+
 def test_r3_runs_only_after_the_seven(tmp_path, setup):
     with pytest.raises(SystemExit, match="R3 runs after"):
         gen.generate("R3", client=client(tmp_path), jobs=1, **setup)
