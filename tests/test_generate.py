@@ -27,7 +27,8 @@ print("config:" + os.path.basename(os.environ.get("OPENCODE_CONFIG", "none")))
 tmp = os.path.realpath(os.environ.get("TMPDIR", ""))
 print("own-empty-tmp:" + str(os.path.isdir(tmp) and os.listdir(tmp) == [] and tmp != here
                              and not here.startswith(tmp + os.sep)
-                             and os.path.basename(tmp).startswith("redteam-tmp-")))
+                             and os.path.basename(tmp) == "tmp" and os.path.basename(here) == "work"
+                             and os.path.dirname(tmp) == os.path.dirname(here)))
 print("dir-is-folder:" + str(os.path.realpath(sys.argv[sys.argv.index("--dir") + 1]) == here
                              if "--dir" in sys.argv else False))
 print('[{{"line": 1, "old": "a", "new": "b", "why": "w"}}]')
@@ -54,7 +55,8 @@ def setup(tmp_path):
     for part in ("R1", "R2", "R3"):
         (prompts / f"{part}.txt").write_text(f"prompt of {part}\n", encoding="utf-8")
     return {"files": files, "prompts": prompts, "responses": tmp_path / "responses",
-            "log": tmp_path / "generation.jsonl", "model": "prov/some-model", "date": "2026-11-15"}
+            "log": tmp_path / "generation.jsonl", "model": "prov/some-model", "date": "2026-11-15",
+            "runs": tmp_path / "runs"}
 
 
 def test_the_seven_conversations_of_section_4_and_r3_apart():
@@ -113,7 +115,7 @@ def test_the_record_names_the_agent_and_its_configuration(tmp_path, setup):
 
 def test_the_probe_uses_toy_files_and_writes_no_response(tmp_path, setup):
     out = tmp_path / "probes"
-    record = gen.probe(client=client(tmp_path), model="prov/m", out=out)
+    record = gen.probe(client=client(tmp_path), model="prov/m", out=out, runs=tmp_path / "runs")
     text = (out / record["response"]).read_text(encoding="utf-8")
     assert "cwd-files:toy.md" in text and "--agent|redteam" in text
     assert "polar" not in text
@@ -141,6 +143,26 @@ def test_a_model_that_writes_in_its_folder_is_recorded_not_hidden(tmp_path, setu
     assert records[0]["files_after"] == ["note.txt", "paper.md", "verify.py"]
     # the next conversation still starts from the files as released
     assert setup["files"][0].read_text(encoding="utf-8") == "content of paper.md\n"
+
+
+def test_each_session_has_its_own_folder_outside_the_repository_and_it_is_kept(tmp_path, setup):
+    extra = "open(os.path.join(os.environ['TMPDIR'], 'check.py'), 'w').write('x')"
+    records = gen.generate("R3", client=client(tmp_path, extra), jobs=1, require_main=False, **setup)
+    session = setup["runs"] / records[0]["session"]
+    assert records[0]["session"].startswith("R3-1-")
+    assert sorted(p.name for p in session.iterdir()) == ["tmp", "work"]
+    assert sorted(p.name for p in (session / "work").iterdir()) == ["paper.md", "verify.py"]
+    # what a model leaves in its temporary directory is recorded, and still there to be read
+    assert records[0]["tmp_files_after"] == ["check.py"]
+    assert (session / "tmp" / "check.py").read_text() == "x"
+
+
+def test_sessions_never_run_inside_a_repository(tmp_path, setup):
+    (tmp_path / "repo" / ".git").mkdir(parents=True)
+    setup["runs"] = tmp_path / "repo" / "redteam" / "runs"
+    with pytest.raises(SystemExit, match="inside a git repository"):
+        gen.generate("R3", client=client(tmp_path), jobs=1, require_main=False, **setup)
+    assert not setup["responses"].exists() or not list(setup["responses"].iterdir())
 
 
 def test_no_conversation_is_run_twice(tmp_path, setup):

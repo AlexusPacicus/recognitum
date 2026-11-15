@@ -4,12 +4,16 @@
     python redteam/generate.py R3 --model PROVIDER/MODEL     # deviation 2: only after the seven
     python redteam/generate.py main --model PROVIDER/MODEL --dry-run   # prints the commands, calls nothing
 
+    python redteam/generate.py probe --model PROVIDER/MODEL  # a toy file: what the agent can do
+
 Run by the author. Each conversation:
-- starts in a new temporary folder that holds two files and nothing else, the manuscript and the
-  verifier's source, copied from the case;
+- has a session folder of its own beside the repository, never inside it (`--runs`), kept
+  afterwards: `work`, which holds two files and nothing else, the manuscript and the verifier's
+  source, copied from the case; and `tmp`, empty, given to the client as its temporary directory;
 - is one call of `opencode run`, so one new session, with the prompt of `redteam/prompts` sent as
-  written and the two files attached; `--pure` (no external plugin) and never `--auto` (no
-  permission is approved for it);
+  written and the two files attached; the agent is the one of `redteam/opencode.json`, which reads
+  and has no shell, no edit, no network, no subagent and no skill; `--pure` (no external plugin)
+  and never `--auto` (no permission is approved for it);
 - has its output stored as returned in `redteam/responses`, and one line in
   `redteam/generation.jsonl`: the model, the client and its version, the times, the exit code, the
   hashes of the prompt, of the two files and of the response, and what the folder held afterwards.
@@ -46,6 +50,7 @@ LOG = HERE / "generation.jsonl"
 CONFIG = HERE / "opencode.json"
 AGENT = "redteam"
 PROBES = HERE / "probes"
+RUNS = REPO.parent / "recognitum-redteam-runs"  # beside the repository, never inside it
 _lock = threading.Lock()
 
 
@@ -83,35 +88,48 @@ def command(client: str, model: str, conversation_id: str, prompt: str, names: l
     return cmd
 
 
-def _call(client: str, model: str, title: str, prompt: str, contents: dict[str, bytes], timeout) -> dict:
-    """One call of the client in a new folder that holds `contents` and nothing else."""
-    with tempfile.TemporaryDirectory(prefix="redteam-") as tmp, \
-            tempfile.TemporaryDirectory(prefix="redteam-tmp-") as scratch:
-        # The real path: the client takes a folder reached through a symbolic link for a directory
-        # outside its project, and rejects the reads of the model there (the second launch).
-        folder = Path(tmp).resolve()
-        # The client lets its agents read its own temporary directory. The shared one held a package
-        # of the blind review, so each call gets an empty one of its own.
-        scratch = Path(scratch).resolve()
-        for name, data in contents.items():
-            (folder / name).write_bytes(data)
-        before = {name: _sha(data) for name, data in contents.items()}
-        started = _now()
-        try:
-            p = subprocess.run(command(client, model, title, prompt, sorted(before), str(folder)),
-                               cwd=folder, env=dict(os.environ, PWD=str(folder), TMPDIR=str(scratch),
-                                                    OPENCODE_CONFIG=str(CONFIG)),
-                               stdin=subprocess.DEVNULL, capture_output=True, timeout=timeout)
-            out, err, code = p.stdout, p.stderr, p.returncode
-        except subprocess.TimeoutExpired as exc:
-            out, err, code = exc.stdout or b"", exc.stderr or b"", "timeout"
-        ended = _now()
-        after = sorted(x.relative_to(folder).as_posix() for x in folder.rglob("*") if x.is_file())
-        unchanged = all((folder / n).is_file() and _sha((folder / n).read_bytes()) == h
-                        for n, h in before.items())
-        tmp_after = sorted(x.relative_to(scratch).as_posix() for x in scratch.rglob("*") if x.is_file())
+def check_runs(runs: Path) -> Path:
+    """The folder of the sessions, by its real path. It is never inside a git repository: the
+    client takes the repository a folder is in for its project, and the model could read all of it."""
+    runs = Path(runs).resolve()
+    inside = [p for p in (runs, *runs.parents) if (p / ".git").exists()]
+    if inside:
+        raise SystemExit(f"{runs} is inside a git repository ({inside[0]}): no session runs there")
+    runs.mkdir(parents=True, exist_ok=True)
+    return runs
+
+
+def _call(client: str, model: str, title: str, prompt: str, contents: dict[str, bytes], timeout,
+          runs: Path) -> dict:
+    """One call of the client, in a session folder of its own that is kept afterwards:
+    `work`, which holds `contents` and nothing else, and `tmp`, empty, its temporary directory."""
+    # Real paths: the client takes a folder reached through a symbolic link for a directory outside
+    # its project, and rejects the reads of the model there (the second launch).
+    session = Path(tempfile.mkdtemp(prefix=f"{title}-{dt.datetime.now():%Y%m%dT%H%M%S}-", dir=runs)).resolve()
+    folder, scratch = session / "work", session / "tmp"
+    folder.mkdir()
+    # The client lets its agents read its own temporary directory. The shared one held a package of
+    # the blind review, so each call gets an empty one of its own.
+    scratch.mkdir()
+    for name, data in contents.items():
+        (folder / name).write_bytes(data)
+    before = {name: _sha(data) for name, data in contents.items()}
+    started = _now()
+    try:
+        p = subprocess.run(command(client, model, title, prompt, sorted(before), str(folder)),
+                           cwd=folder, env=dict(os.environ, PWD=str(folder), TMPDIR=str(scratch),
+                                                OPENCODE_CONFIG=str(CONFIG)),
+                           stdin=subprocess.DEVNULL, capture_output=True, timeout=timeout)
+        out, err, code = p.stdout, p.stderr, p.returncode
+    except subprocess.TimeoutExpired as exc:
+        out, err, code = exc.stdout or b"", exc.stderr or b"", "timeout"
+    ended = _now()
+    after = sorted(x.relative_to(folder).as_posix() for x in folder.rglob("*") if x.is_file())
+    unchanged = all((folder / n).is_file() and _sha((folder / n).read_bytes()) == h
+                    for n, h in before.items())
+    tmp_after = sorted(x.relative_to(scratch).as_posix() for x in scratch.rglob("*") if x.is_file())
     return {"out": out, "err": err,
-            "record": {"model": model, "client": Path(client).name, "agent": AGENT,
+            "record": {"model": model, "client": Path(client).name, "agent": AGENT, "session": session.name,
                        "config_sha256": _sha(CONFIG.read_bytes()), "started": started, "ended": ended,
                        "exit": code, "prompt_sha256": _sha(prompt.encode("utf-8")),
                        "inputs_sha256": before, "inputs_unchanged": unchanged, "files_after": after,
@@ -119,11 +137,12 @@ def _call(client: str, model: str, title: str, prompt: str, contents: dict[str, 
                        "stderr_tail": err.decode("utf-8", "replace")[-600:]}}
 
 
-def _one(conv: dict, *, client, model, date, files, prompts, responses, log, version, timeout) -> dict:
+def _one(conv: dict, *, client, model, date, files, prompts, responses, log, version, timeout, runs) -> dict:
     prompt_file = Path(prompts) / f"{conv['part']}.txt"
     prompt = prompt_file.read_text(encoding="utf-8").strip()
     name = response_name(conv["id"], model, date)
-    done = _call(client, model, conv["id"], prompt, {Path(f).name: Path(f).read_bytes() for f in files}, timeout)
+    done = _call(client, model, conv["id"], prompt, {Path(f).name: Path(f).read_bytes() for f in files}, timeout,
+                 runs)
     (Path(responses) / name).write_bytes(done["out"])
     # What the client printed beside the response: the tools the model called and what they gave.
     traces = Path(log).parent / "traces"
@@ -143,11 +162,11 @@ PROBE_PROMPT = ("This is a test of the tools you have, on a toy file. Answer fou
                 "you could. 4: create a file named made.txt in your folder and say whether you could.")
 
 
-def probe(*, client: str, model: str, out: Path, timeout: float = 600) -> dict:
+def probe(*, client: str, model: str, out: Path, runs: Path, timeout: float = 600) -> dict:
     """One conversation on a toy file, to see what the agent can do. It is not a conversation of
     the red team: neither the manuscript nor the verifier is sent, and no response is written."""
     toy = "".join(f"line {k}: {PROBE_WORD if k == 850 else 'nothing here'}\n" for k in range(1, 1201))
-    done = _call(client, model, "probe", PROBE_PROMPT, {"toy.md": toy.encode("utf-8")}, timeout)
+    done = _call(client, model, "probe", PROBE_PROMPT, {"toy.md": toy.encode("utf-8")}, timeout, check_runs(runs))
     out = Path(out)
     out.mkdir(parents=True, exist_ok=True)
     stamp = dt.datetime.now().strftime("%Y%m%dT%H%M%S")
@@ -159,8 +178,9 @@ def probe(*, client: str, model: str, out: Path, timeout: float = 600) -> dict:
     return record
 
 
-def generate(which: str, *, client: str, model: str, date: str, files, prompts, responses, log,
+def generate(which: str, *, client: str, model: str, date: str, files, prompts, responses, log, runs,
              jobs: int = 7, timeout: float = 1800, require_main: bool = True) -> list[dict]:
+    runs = check_runs(runs)
     responses = Path(responses)
     responses.mkdir(parents=True, exist_ok=True)
     existing = {f.name.split("-")[0] + "-" + f.name.split("-")[1] for f in responses.iterdir()
@@ -175,7 +195,7 @@ def generate(which: str, *, client: str, model: str, date: str, files, prompts, 
             raise SystemExit(f"R3 runs after the seven conversations of section 4; missing: {', '.join(lacking)}")
     version = subprocess.run([client, "--version"], capture_output=True, text=True).stdout.strip()
     kw = dict(client=client, model=model, date=date, files=files, prompts=prompts, responses=responses,
-              log=log, version=version, timeout=timeout)
+              log=log, version=version, timeout=timeout, runs=runs)
     with ThreadPoolExecutor(max_workers=max(1, jobs)) as pool:
         return list(pool.map(lambda c: _one(c, **kw), convs))
 
@@ -188,10 +208,11 @@ def main(argv=None) -> None:
     ap.add_argument("--jobs", type=int, default=7, help="conversations at the same time")
     ap.add_argument("--timeout", type=float, default=1800, help="seconds for one conversation")
     ap.add_argument("--dry-run", action="store_true")
+    ap.add_argument("--runs", default=str(RUNS), help="folder of the sessions, outside any repository")
     args = ap.parse_args(argv)
     client = shutil.which(args.client) or args.client
     if args.which == "probe":
-        r = probe(client=client, model=args.model, out=PROBES, timeout=args.timeout)
+        r = probe(client=client, model=args.model, out=PROBES, runs=Path(args.runs), timeout=args.timeout)
         print(f"exit={r['exit']} files afterwards: {r['files_after']}")
         print(f"files in its temporary directory afterwards: {r['tmp_files_after']}")
         trace = (PROBES / r["response"].replace(".txt", ".stderr.txt")).read_text(encoding="utf-8",
@@ -216,7 +237,7 @@ def main(argv=None) -> None:
         return
     records = generate(args.which, client=client, model=args.model, date=dt.date.today().isoformat(),
                        files=FILES, prompts=PROMPTS, responses=RESPONSES, log=LOG, jobs=args.jobs,
-                       timeout=args.timeout)
+                       timeout=args.timeout, runs=Path(args.runs))
     for r in records:
         note = "" if r["inputs_unchanged"] and len(r["files_after"]) == len(FILES) else "  WROTE IN ITS FOLDER"
         print(f"{r['id']} exit={r['exit']} -> redteam/responses/{r['response']}{note}")
