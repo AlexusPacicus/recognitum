@@ -2,7 +2,7 @@
 
 Written by `analysis/analyze.py` from `results/mutants.csv`. Not edited by hand.
 
-Lines read: 787; mutants: 747; repeated lines: 40.
+Lines read: 787; mutants drawn by code: 747; edits of the red team: 0; repeated lines: 40.
 
 ## Mutants by class (section 7)
 
@@ -123,6 +123,10 @@ Counts are of valid mutants on which the detector ended. The interval is given w
 | M7 | C, other column | 18 | 0 | 18/18 | 0/18 | — | covered | yes |
 | B1 | once | 25 | 0 | 25/25 | 0/25 | 86.7 to 100.0 | covered | no: a block is a false alarm |
 | B1 | repeated | 25 | 0 | 25/25 | 0/25 | 86.7 to 100.0 | covered | no: a block is a false alarm |
+
+## Q3. Edits written by a model: the red team
+
+No edit of the red team is in the results file.
 
 ## Collisions, apart
 
