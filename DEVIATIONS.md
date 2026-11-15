@@ -160,3 +160,70 @@ second launch.
 
 **From here on:** a conversation in which the client reaches the model is not run again, whatever
 it returns.
+
+## 7. The second launch reached the model with a faulty harness, and the seven are run a third time
+
+**Written:** 15 November 2026, 14:05 CET. No detector has run on any edit of the red team.
+
+**What deviation 6 says:** a conversation in which the client reaches the model is not run again,
+whatever it returns. **This deviation breaks that sentence**, three hours after it was written, and
+after the author and the agent saw what the second launch returned.
+
+**What happened in the second launch** (13:13 CET, commit `2b7ea11`). The seven conversations
+reached the model and ended with exit code 0. Four responses are empty, two are one sentence with
+no list, and one, R1-3, holds a list of edits. The record shows two faults of the harness:
+
+- *The client rejected the model's reads of the manuscript.* The attached file does not reach the
+  model whole, and the client took the conversation's folder, reached through a symbolic link, for
+  a directory outside its project. Six conversations stopped there.
+- *The model was not given what deviation 5 says.* Shell commands needed no permission. In R1-3 the
+  model wrote two scripts that restate the verifier's presence check, and ran them on its own edits
+  before answering. It wrote them in the client's shared temporary directory, which also held a
+  package of the blind review of 14 November, with the protocol in it. The protocol describes the
+  count check. Whether the model read it cannot be known: of the client's trace, only the last 600
+  characters were kept. The record of that launch says the model wrote nothing, because it looked
+  only at the conversation's folder.
+
+**What the agent and the author had seen when this was decided:** the two one-sentence responses,
+the first 600 characters of R1-3 (two of its edits), and the kept ends of the traces.
+
+**What is changed.** The harness, tested three times on a toy file and never on the manuscript or
+the verifier (`redteam/generate.py probe`):
+
+- the agent is the one of `redteam/opencode.json`: it can read, search and list; it has no shell,
+  no edit, no network, no subagent and no skill;
+- each conversation has a session folder of its own beside the repository, never inside one, kept
+  afterwards: `work`, with the two files, and `tmp`, empty, which the client uses as its temporary
+  directory;
+- the whole trace of the client is kept in `redteam/traces`, and the record lists what is left in
+  `tmp`;
+- the list of a response is the last JSON list of objects in its text, because the client prints
+  what the model says while it works before its answer.
+
+In the third probe the model read line 850 of the toy file, and could not run a command, read
+`/etc/hosts` or create a file.
+
+**The seven conversations of section 4 are launched a third time,** with the same model, prompts
+and files. The third launch is the red team of Q3.
+
+**What is kept of the second launch:** everything, in `redteam/launch-2`: the seven responses as
+returned, their lines of the record, and the two scripts. The five edits of R1-3 are run through
+both detectors and reported apart, never with those of the third launch, and with the note that
+the model had a shell and may have read the protocol.
+
+**What this harness still does not give, declared:**
+
+- the client's own system prompt reaches the model with the prompt of the protocol; it is not
+  recorded;
+- the client lets the agent read, by their full path, the folders of the author's skills and its
+  own folder of tool outputs; nothing of this project is there;
+- the path of the session folder, which the model sees, holds the words `recognitum-redteam-runs`
+  and the conversation's identifier;
+- the probes are kept on the author's machine and not published: their traces print paths of that
+  machine.
+
+**From here on:** the third launch is not run again, whatever it returns. If its conversations
+fail, Q3 is reported with what they gave. The same holds for part R3, run after it.
+
+**What the report says:** that the red team was generated at the third attempt, why, and that a
+rule written after the first failure was broken after the second.
