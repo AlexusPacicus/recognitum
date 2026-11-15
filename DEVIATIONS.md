@@ -131,3 +131,32 @@ configuration of the client is still loaded. The record shows whether the model 
 folder; it does not show what it read.
 
 **What the report says:** how the responses were generated, and these limits.
+
+## 6. The first launch of the script failed before any conversation, and is run again
+
+**Written:** 15 November 2026, 12:55 CET. No response of the red team exists: the seven files of the
+first launch are empty.
+
+**What deviation 5 says:** no conversation is run twice; one that fails is stored as it ended and
+gives no edit.
+
+**What happened:** the author launched the seven conversations of section 4 at 12:54 CET. Each call
+of the client ended within two seconds with exit code 1, no output, and the message `File not
+found: polar-projector-paper.md`. The script named the two attached files by their bare names, and
+the client did not look for them in the folder it was started in. The client stopped while reading
+its own arguments: nothing was sent to the model, and no conversation took place.
+
+**What is changed:** the script names the folder in full to the client (the path of each attached
+file, `--dir`, and the working directory). The seven conversations are launched again, with the
+same model, prompts and files.
+
+**Why it is not a second run of a conversation:** the rule exists so that no response is thrown
+away and asked for again. Here there is no response to throw away. This reading is the author's
+and the agent's, made after the failure, and the report says so.
+
+**What is kept:** the seven empty files and their lines of the record, in
+`redteam/failed-launches/1`. The lines also stay in `redteam/generation.jsonl`, before those of the
+second launch.
+
+**From here on:** a conversation in which the client reaches the model is not run again, whatever
+it returns.
