@@ -159,6 +159,7 @@ Mutants whose new figure string equals a published string. They are valid and ar
 | M6 | 5 | 5 | 0 | 0 | 0 | — |
 | M7 | 5 | 3 | 0 | 0 | 2 | code_commit |
 | B1 | 5 | 5 | 0 | 0 | 0 | — |
+| every class | 40 | 38 | 0 | 0 | 2 | code_commit |
 
 ## Predictions and results
 
