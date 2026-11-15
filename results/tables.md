@@ -2,7 +2,7 @@
 
 Written by `analysis/analyze.py` from `results/mutants.csv`. Not edited by hand.
 
-Lines read: 787; mutants drawn by code: 747; edits of the red team: 0; repeated lines: 40.
+Lines read: 817; mutants drawn by code: 747; edits of the red team: 30; repeated lines: 40.
 
 ## Mutants by class (section 7)
 
@@ -16,6 +16,7 @@ Lines read: 787; mutants drawn by code: 747; edits of the red team: 0; repeated 
 | M6 | 50 | 50 | 0 | 0 | 0 | 0 | 2d8724a | 0e109781f03f |
 | M7 | 36 | 36 | 0 | 0 | 0 | 0 | 2d8724a, a44cae4 | 0e109781f03f |
 | B1 | 50 | 50 | 0 | 0 | 0 | 12 | 2d8724a | 0e109781f03f |
+| R1 | 30 | 30 | 0 | 0 | 0 | 0 | 8dfcfec | 0e109781f03f |
 
 ## Q1. Figure places and distinct strings
 
@@ -126,7 +127,39 @@ Counts are of valid mutants on which the detector ended. The interval is given w
 
 ## Q3. Edits written by a model: the red team
 
-No edit of the red team is in the results file.
+Parts R1 and R3 by the stratum of the figure place the edit touches. The edits are not a sample of anything, so no interval is given. Part R3 is deviation 2: it is reported apart and was not pre-registered.
+
+### Verifier
+
+| Class | Stratum or subgroup | Valid | Invalid | Blocked by a check | Blocked by a crash | 95 % interval of blocked, % | Word | Should a detector block |
+|---|---|---|---|---|---|---|---|---|
+| R1 | all | 30 | 0 | 0/30 | 0/30 | — | open | yes |
+| R1 | repeated | 15 | 0 | 0/15 | 0/15 | — | open | yes |
+| R1 | no figure place | 15 | 0 | 0/15 | 0/15 | — | open | yes |
+
+### Count check
+
+| Class | Stratum or subgroup | Valid | Invalid | Blocked by a check | Blocked by a crash | 95 % interval of blocked, % | Word | Should a detector block | Follows from the design |
+|---|---|---|---|---|---|---|---|---|---|
+| R1 | all | 30 | 0 | 17/30 | 0/30 | — | partial | yes | measured |
+| R1 | repeated | 15 | 0 | 14/15 | 0/15 | — | partial | yes | measured |
+| R1 | no figure place | 15 | 0 | 3/15 | 0/15 | — | partial | yes | measured |
+
+### At least one of the two
+
+| Class | Stratum or subgroup | Valid | Invalid | Blocked by a check | Blocked by a crash | 95 % interval of blocked, % | Word | Should a detector block |
+|---|---|---|---|---|---|---|---|---|
+| R1 | all | 30 | 0 | 17/30 | 0/30 | — | partial | yes |
+| R1 | repeated | 15 | 0 | 14/15 | 0/15 | — | partial | yes |
+| R1 | no figure place | 15 | 0 | 3/15 | 0/15 | — | partial | yes |
+
+### Invalid edits of parts R1 and R3
+
+None.
+
+### Part R2, one line per edit
+
+No edit of part R2.
 
 ## Collisions, apart
 
