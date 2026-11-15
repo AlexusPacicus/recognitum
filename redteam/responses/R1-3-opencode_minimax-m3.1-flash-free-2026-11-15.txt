@@ -1,0 +1,34 @@
+```json
+[
+  {
+    "line": 508,
+    "old": "k = 15",
+    "new": "k = 5",
+    "why": "The §3.2 trustworthiness values were computed with k = 15, so the caption now states a neighbourhood size no measurement used, and the verifier checks only the trustworthiness numbers, never the k parameter (the string \"15\" still survives at every \"recall@15\" elsewhere)."
+  },
+  {
+    "line": 721,
+    "old": "50 query chunks",
+    "new": "500 query chunks",
+    "why": "The §3.5 re-anchoring experiment used 50 queries, so the method now claims a tenfold larger sample behind the 29× factor and the 0.543 recall, and nothing in the verifier reads the query count out of the artifact."
+  },
+  {
+    "line": 731,
+    "old": "its 100 neighbours",
+    "new": "its 1,000 neighbours",
+    "why": "The local-PCA arm refits on the query's 100 nearest neighbours, so the table now describes an arm refitting on 1,000 — changing the baseline the section uses to bound the operator — while the artifact check compares only the recall and cost columns of that row."
+  },
+  {
+    "line": 762,
+    "old": "229× less",
+    "new": "19× less",
+    "why": "The local PCA's 3,749 µs per-query cost exceeds the operator's 16.4 µs by 229×, so the prose now asserts a 19× advantage that contradicts the cost table directly above it, and the presence check passes because the string \"229\" still appears at lines 125 and 779."
+  },
+  {
+    "line": 1214,
+    "old": "1.4 \\times 10^{3}",
+    "new": "9.1 \\times 10^{3}",
+    "why": "At d_esc/||r|| = 10^-11 the scalar form overestimates the true residual by 1.4×10^3, so Appendix B now reports a 9.1×10^3 error that the committed sweep contradicts, and the verifier's presence check only requires the string \"1.4\" somewhere in the manuscript, which the adjacent 10^{-5} factor still supplies."
+  }
+]
+```

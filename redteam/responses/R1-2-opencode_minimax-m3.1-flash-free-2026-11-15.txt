@@ -1,0 +1,34 @@
+```json
+[
+  {
+    "line": 59,
+    "old": "from 0.019 to 0.543",
+    "new": "from 0.019 to 0.640",
+    "why": "The abstract now claims re-anchoring lifts local recall@15 to 0.640 (and no longer matches its own 29× factor) when the measured value is 0.543 — the artifact check compares its hard-coded constant to the artifact rather than to the paper, and the presence check still finds \"0.543\" printed in §3.5, §4.1 and the abstract, so nothing fails."
+  },
+  {
+    "line": 99,
+    "old": "0.31–1.52",
+    "new": "0.41–1.52",
+    "why": "§1 now states that UMAP relocates previously placed points by 0.41–1.52× the layout width although the measured minimum is 0.31 — the artifact check compares its constant to drift.json, not to the manuscript, and the presence check still finds \"0.31\" at §3.2 and §3.3."
+  },
+  {
+    "line": 721,
+    "old": "50 query chunks",
+    "new": "500 query chunks",
+    "why": "The §3.5 method now says 500 queries were sampled when the evaluation actually used 50, and no check in the verifier compares the query count against bench/results/reanchor.json, so the false protocol claim is invisible to it."
+  },
+  {
+    "line": 796,
+    "old": "0.567",
+    "new": "0.527",
+    "why": "The ablation table now reports a median recall of 0.527 for the clamp-removed view (implying the clamp changes something, as the prose at line 801 denies) whereas the artifact and the operator row both give 0.567 — the table cells of §3.5 are never parsed, only §B and §C are, and the string \"0.567\" survives in two other cells so the presence check still passes."
+  },
+  {
+    "line": 1215,
+    "old": "\\( 1.4 \\times 10^{5} \\)",
+    "new": "\\( 1.4 \\times 10^{4} \\)",
+    "why": "Appendix B now says the scalar form overstates the residual by 1.4×10⁴ at d_esc/‖r‖₂ = 10⁻¹³ when the artifact measures 1.4×10⁵ — the verifier registers that power as the single character \"5\", and the presence check explicitly skips single-character published strings as unlocatable."
+  }
+]
+```

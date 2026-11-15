@@ -1,0 +1,34 @@
+```json
+[
+  {
+    "line": 427,
+    "old": "**4.66**",
+    "new": "**4.26**",
+    "why": "The §3.1 cost table now reports the prepared per-stimulus evaluation at 4.26 µs when the committed latency artifact measures 4.66 µs, and the verifier misses it because it parses only the appendix B and C tables out of the manuscript while its remaining check on 4.66 is a bare presence test that the four other mentions of that number still satisfy."
+  },
+  {
+    "line": 790,
+    "old": "0.543",
+    "new": "0.653",
+    "why": "The ablation paragraph now states that the re-anchored operator's mean local recall is 0.653 when the measured mean is 0.543, and the verifier misses it because its 0.543 check is a presence check that the ten remaining occurrences of the string still satisfy."
+  },
+  {
+    "line": 721,
+    "old": "50 query chunks",
+    "new": "500 query chunks",
+    "why": "The re-anchoring instrument is now described as averaging over 500 queries when only 50 were sampled, and no verifier check pins the query count because it reads only the chance level out of the reanchor artifact's config."
+  },
+  {
+    "line": 508,
+    "old": "k = 15",
+    "new": "k = 5",
+    "why": "The trustworthiness column of §3.2 and §3.4 is now attributed to a 5-nearest-neighbour score although it was computed at k = 15, and the verifier never checks the neighbourhood size used for that metric."
+  },
+  {
+    "line": 808,
+    "old": "0.25",
+    "new": "0.35",
+    "why": "The ablation now attributes the recall 0.628 to the screen scale ratio s = 0.35 when the artifact's x_scale_0.25 entry produced it, and the verifier checks only that the five recall scores appear somewhere in the paper, never that they are attached to the correct scale ratios."
+  }
+]
+```

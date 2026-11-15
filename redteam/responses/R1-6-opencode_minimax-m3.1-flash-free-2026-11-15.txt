@@ -1,0 +1,34 @@
+```json
+[
+  {
+    "line": 721,
+    "old": "50 query chunks",
+    "new": "5 query chunks",
+    "why": "Every recall figure in §3.5 was averaged over 50 seeded query chunks, so the manuscript now claims a 10× smaller evaluation sample than the one that produced all of them (the verifier reads reanchor.json only for `chance`, never for the query count)."
+  },
+  {
+    "line": 808,
+    "old": "0.25",
+    "new": "0.35",
+    "why": "The committed ablation attributes the 0.628 mean recall to s = 0.25, so the manuscript now pins that measurement to a scale ratio that was never run (the verifier checks only the mean per x_scale_* key, never which s produced which value)."
+  },
+  {
+    "line": 866,
+    "old": "382",
+    "new": "380",
+    "why": "A two-axis refit of the 384-dimensional embedding space discards 384 − 2 = 382 dimensions, so the manuscript now understates the dimensions the local PCA discards by two (no verifier check mentions 382)."
+  },
+  {
+    "line": 743,
+    "old": "534",
+    "new": "354",
+    "why": "The artifact records the re-anchored arm's one-time codebook build at 534 ms, so the §3.5 cost table now understates the most expensive step in it by a third (the verifier compares its own stored string to the artifact and only checks that \"534\" occurs *somewhere* in the text, which the prose at line 757 still supplies)."
+  },
+  {
+    "line": 1148,
+    "old": "24×",
+    "new": "12×",
+    "why": "d = 384 carries 384/16 = 24× the floating-point work of d = 16, so Appendix A now claims half the arithmetic increase the sweep actually shows (the only published string \"24\" belongs to an unrelated PCA/project() ratio at line 458, so the presence check stays satisfied)."
+  }
+]
+```

@@ -1,0 +1,34 @@
+```json
+[
+  {
+    "line": 721,
+    "old": "50 query chunks",
+    "new": "500 query chunks",
+    "why": "The manuscript now claims the §3.5 re-anchoring instrument averaged over 500 queries when it in fact used 50, so the 0.543 mean, the 29× factor and the 0.981 radial bound are presented as a ten-times-larger sample than was measured — a parameter no artifact check registers."
+  },
+  {
+    "line": 427,
+    "old": "**4.66**",
+    "new": "**4.46**",
+    "why": "The §3.1 cost table now states that a prepared-frame `evaluate()` costs 4.46 µs when the committed artifact says 4.66 µs, yet the presence check still passes because the literal string \"4.66\" occurs elsewhere in the manuscript (§1, §3.1 prose, Appendix A)."
+  },
+  {
+    "line": 503,
+    "old": "7/7",
+    "new": "6/7",
+    "why": "The §3.2 table now claims UMAP fitted once and extended by `transform()` relocated already-placed points at one of the seven growth steps, which is false — it is still at all seven — and it slips through because the verifier's published still-step value is the single character \"7\", which the presence check explicitly skips as unlocatable."
+  },
+  {
+    "line": 1138,
+    "old": "5.65×",
+    "new": "6.65×",
+    "why": "Appendix A's row for d = 8192 now claims the operator costs 6.65× its d = 16 cost when the sweep's own numbers (21.52 µs vs 3.81 µs) give 5.65×, and the mismatch is invisible because the \"vs. d = 16\" column of that table is never compared against the committed artifact."
+  },
+  {
+    "line": 846,
+    "old": "0.056",
+    "new": "0.156",
+    "why": "The §4.1 summary table now reports the once-fitted global PCA's local recall@15 as 0.156 when the measurement is 0.056, and the presence check cannot catch it because \"0.056\" still occurs in §1 and in the §3.5 table, so the string survives even though the number it is attached to is wrong."
+  }
+]
+```

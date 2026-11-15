@@ -1,0 +1,34 @@
+```json
+[
+  {
+    "line": 59,
+    "old": "0.019",
+    "new": "0.029",
+    "why": "The abstract now reports the published-frame operator's mean recall@15 as 0.029 instead of the measured 0.019, so the 29× gain it states no longer follows from the two numbers printed beside it."
+  },
+  {
+    "line": 502,
+    "old": "0/7",
+    "new": "7/7",
+    "why": "The §3.2 table now states that the moving-anchor operator held every already-placed point still at all seven growth steps, when the measurement shows it relocated points at every one of them."
+  },
+  {
+    "line": 732,
+    "old": "0.567",
+    "new": "0.667",
+    "why": "The §3.5 table now reports a median local recall@15 of 0.667 for the re-anchored operator, a value the benchmark does not produce."
+  },
+  {
+    "line": 481,
+    "old": "batches of 250",
+    "new": "batches of 500",
+    "why": "The method now describes the corpus as growing in 500-chunk batches, when the growth schedule advances 250 chunks at a time (500 → 750 → … → 2,221) over seven transitions."
+  },
+  {
+    "line": 866,
+    "old": "382 dimensions",
+    "new": "380 dimensions",
+    "why": "The text now says a two-component refit of 384-dimensional embeddings discards 380 dimensions, when keeping two of 384 leaves 382 discarded."
+  }
+]
+```
