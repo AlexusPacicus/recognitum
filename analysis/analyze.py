@@ -31,14 +31,15 @@ DETECTORS = ("verifier", "count")
 NAMES = {"verifier": "Verifier", "count": "Count check", "either": "At least one of the two"}
 TIMES = ("verifier_s", "count_s")
 
-CLASS_ORDER = ["M1", "M2", "M2all", "M4", "M5", "M6", "M7", "B1"]
-CLASS_LABEL = {"M2all": "M2, every figure place"}
+CLASS_ORDER = ["M1", "M2", "M2all", "M4", "M5", "M6", "M7", "B1", "R1", "R2", "R3"]
+CLASS_LABEL = {"M2all": "M2, every figure place", "R3": "R3, not pre-registered"}
 STRATUM_ORDER = ["all", "once", "repeated", "same section", "different sections", "checked",
-                 "construction", "remove", "read, print now false", "read, print still true", "unread"]
+                 "construction", "remove", "read, print now false", "read, print still true", "unread",
+                 "no figure place"]
 # Classes whose targets were drawn as a sample: the Wilson interval describes that draw.
 SAMPLED = {"M1", "M2", "M4", "M6", "B1"}
 # Classes with a line for the whole class next to the subgroups that were recorded, not allocated.
-WHOLE = {"M1", "M7"}
+WHOLE = {"M1", "M7", "R1", "R3"}
 # Results of the count check that follow from its design (protocol, section 2).
 COUNT_BY_DESIGN = {"M1", "M2", "M2all", "M4", "M5", "M6", "B1"}
 M6_IN_RATE = "read, print now false"
@@ -328,6 +329,61 @@ def predictions(table: list[dict], published=()) -> list[dict]:
     return out
 
 
+# --------------------------------------------------------------------------- Q3, the red team
+
+
+def _did(r: dict, det: str) -> str:
+    if not _valid(r):
+        return "not run"
+    return {"check": "blocked by a check", "crash": "blocked by a crash", "timeout": "timeout",
+            "": "passed"}[r[f"{det}_by"]]
+
+
+def r2_list(rows: list[dict], edits: list[dict], rulings: dict) -> list[dict]:
+    """Part R2, one line per edit: its name, the author's ruling, what the model expected and what
+    each detector did (section 8)."""
+    by_id = {e["edit_id"]: e for e in edits}
+    out = []
+    for r in rows:
+        if r["class"] != "R2":
+            continue
+        e = by_id.get(r["mutant_id"], {})
+        ruling = rulings.get(r["mutant_id"])
+        out.append({
+            "edit_id": r["mutant_id"],
+            "name": str(e.get("name") or r["stratum"] or "not given"),
+            "ruling": {True: "false", False: "not false",
+                       None: "no ruling: the edit does not apply"}[ruling],
+            "expects": str(e.get("expects") or "not given"),
+            "verifier": _did(r, "verifier"), "count": _did(r, "count"),
+            "status": "valid" if _valid(r) else f"invalid: {r['invalid_reason']}"})
+    return out
+
+
+def _q3(red: list[dict], edits, rulings) -> list[str]:
+    if not red:
+        return ["No edit of the red team is in the results file.\n"]
+    out = ["Parts R1 and R3 by the stratum of the figure place the edit touches. The edits are not a "
+           "sample of anything, so no interval is given. Part R3 is deviation 2: it is reported apart "
+           "and was not pre-registered.\n"]
+    table = [g for g in q2([r for r in red if r["class"] in ("R1", "R3")]) if g["stratum"]]
+    for det in (*DETECTORS, "either"):
+        out.append(f"### {NAMES[det]}\n")
+        out.append(_q2_table(table, det))
+    bad = [r for r in red if not _valid(r) and r["class"] != "R2"]
+    out.append("### Invalid edits of parts R1 and R3\n")
+    out.append(_table(["Edit", "Part", "Why it is invalid"],
+                      [[r["mutant_id"], _label(r["class"]), r["invalid_reason"]] for r in bad])
+               if bad else "None.\n")
+    out.append("### Part R2, one line per edit\n")
+    r2 = r2_list(red, list(edits), rulings or {})
+    out.append(_table(["Edit", "Name of the attack", "The author rules it", "The model expected",
+                       "Verifier", "Count check", "Validity"],
+                      [[x["edit_id"], x["name"], x["ruling"], x["expects"], x["verifier"], x["count"],
+                        x["status"]] for x in r2]) if r2 else "No edit of part R2.\n")
+    return out
+
+
 # --------------------------------------------------------------------------- rendering
 
 
@@ -373,11 +429,16 @@ def _yes(v) -> str:
     return {True: "yes", False: "NO", None: "no valid mutant"}[v]
 
 
-def render(first: list[dict], again: list[dict], case_q1: dict | None = None, published=()) -> str:
+def render(first: list[dict], again: list[dict], case_q1: dict | None = None, published=(),
+           edits=(), rulings=None) -> str:
+    everything = first
+    red = [r for r in first if r["source"] == "red team"]
+    first = [r for r in first if r["source"] != "red team"]
     table = q2(first)
     out = ["# Tables\n",
            "Written by `analysis/analyze.py` from `results/mutants.csv`. Not edited by hand.\n",
-           f"Lines read: {len(first) + len(again)}; mutants: {len(first)}; repeated lines: {len(again)}.\n"]
+           f"Lines read: {len(everything) + len(again)}; mutants drawn by code: {len(first)}; "
+           f"edits of the red team: {len(red)}; repeated lines: {len(again)}.\n"]
 
     out.append("## Mutants by class (section 7)\n")
     out.append(_table(
@@ -385,7 +446,7 @@ def render(first: list[dict], again: list[dict], case_q1: dict | None = None, pu
          "Collisions", "Commit of the scripts", "Hash of the case"],
         [[_label(p["class"]), p["lines"], p["valid"], p["invalid"], p["timeout_verifier"],
           p["timeout_count"], p["collisions"], ", ".join(p["commits"]), ", ".join(p["case_hashes"])]
-         for p in per_class(first)]))
+         for p in per_class(everything)]))
 
     out.append("## Q1. Figure places and distinct strings\n")
     q = q1(first)
@@ -410,6 +471,9 @@ def render(first: list[dict], again: list[dict], case_q1: dict | None = None, pu
     for det in (*DETECTORS, "either"):
         out.append(f"### {NAMES[det]}\n")
         out.append(_q2_table(table, det))
+
+    out.append("## Q3. Edits written by a model: the red team\n")
+    out += _q3(red, edits, rulings)
 
     out.append("## Collisions, apart\n")
     col = collisions(first)
@@ -470,7 +534,12 @@ def main(argv=None) -> None:
         again += read(Path(args.repetition))
     published = json.loads((REPO / "results" / "control" / "control.json").read_text(
         encoding="utf-8"))["published_strings"]
-    text = render(first, again, q1_case(), published)
+    from redteam import run as redteam
+
+    # The name of each R2 attack, what the model expected and the author's ruling are not columns
+    # of the results file: they are read from the stored responses and from the rulings.
+    edits = redteam.read_responses() if redteam.RESPONSES.is_dir() else []
+    text = render(first, again, q1_case(), published, edits, redteam.read_rulings())
     Path(args.out).write_text(text, encoding="utf-8")
     print(f"{args.out}: {len(first)} mutants, {len(again)} repeated lines")
 

@@ -293,3 +293,59 @@ def test_m7_exception_is_a_cell_that_holds_a_published_string():
     assert p["note"] == "1 of the 1 blocked hold a published string"
     assert m7(["7.7"])["held"] is False
     assert m7(["11.1", "1.12"])["held"] is False  # part of a longer number is not a place
+
+
+# --------------------------------------------------------------------------- Q3, the red team
+
+
+def red(mid, part, stratum, v="", c="", **kw):
+    return dict(row(mid, part, stratum, v, c, **kw), source="red team")
+
+
+def test_r2_list_has_one_line_per_edit_with_ruling_expectation_and_detectors():
+    rows = [red("R2-1-01", "R2", "unit swap", "", ""),
+            red("R2-1-02", "R2", "registry", "check", ""),
+            dict(red("R2-1-03", "R2", "wording", status="invalid", valid=False),
+                 invalid_reason="the author rules that it states nothing false"),
+            dict(red("R2-1-04", "R2", "", status="invalid", valid=False),
+                 invalid_reason="`old` appears 0 times on the line")]
+    edits = [{"edit_id": "R2-1-01", "name": "unit swap", "expects": "pass"},
+             {"edit_id": "R2-1-02", "name": "registry", "expects": "fail"},
+             {"edit_id": "R2-1-03", "name": "wording", "expects": "pass"},
+             {"edit_id": "R2-1-04", "name": "ghost"}]
+    rulings = {"R2-1-01": True, "R2-1-02": True, "R2-1-03": False}
+    lines = an.r2_list(rows, edits, rulings)
+    assert [x["edit_id"] for x in lines] == ["R2-1-01", "R2-1-02", "R2-1-03", "R2-1-04"]
+    assert lines[0] == {"edit_id": "R2-1-01", "name": "unit swap", "ruling": "false", "expects": "pass",
+                        "verifier": "passed", "count": "passed", "status": "valid"}
+    assert lines[1]["verifier"] == "blocked by a check" and lines[1]["expects"] == "fail"
+    assert lines[2]["ruling"] == "not false" and lines[2]["verifier"] == "not run"
+    assert lines[3]["ruling"] == "no ruling: the edit does not apply"
+    assert lines[3]["name"] == "ghost" and lines[3]["expects"] == "not given"
+    assert lines[3]["status"] == "invalid: `old` appears 0 times on the line"
+
+
+def test_r2_list_ignores_the_other_parts():
+    assert an.r2_list([red("R1-1-01", "R1", "once", "check", "check")], [], {}) == []
+
+
+def test_red_team_edits_stay_out_of_the_q2_tables_and_have_their_own_section():
+    rows = q2_rows() + [red("R1-1-01", "R1", "repeated", "", "check"),
+                        red("R1-1-02", "R1", "once", "check", "check"),
+                        dict(red("R1-1-03", "R1", "", status="invalid", valid=False),
+                             invalid_reason="on a heading"),
+                        red("R3-1-01", "R3", "repeated", "", "check"),
+                        red("R2-1-01", "R2", "unit swap", "", "")]
+    text = an.render(rows, [], None, (), [{"edit_id": "R2-1-01", "name": "unit swap", "expects": "pass"}],
+                     {"R2-1-01": True})
+    q2_part, q3_part = text.split("## Q3.")
+    q3_part = q3_part.split("## Collisions")[0]
+    assert "| R1 |" not in q2_part.split("## Q2.")[1]
+    assert "| R1 | all | 2 | 1 | 1/2 |" in q3_part          # verifier: valid, invalid, by a check
+    assert "| R3, not pre-registered | all | 1 | 0 | 0/1 |" in q3_part
+    assert "| R2-1-01 | unit swap | false | pass | passed | passed | valid |" in q3_part
+    assert "on a heading" in q3_part
+
+
+def test_without_red_team_lines_q3_says_so():
+    assert "No edit of the red team is in the results file." in an.render(q2_rows(), [])
