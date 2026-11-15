@@ -4,6 +4,7 @@
     python redteam/run.py run R1   # validity, then both detectors, on the edits of one part
     python redteam/run.py run R2   # refuses to start unless redteam/rulings.csv rules on every edit
     python redteam/run.py run R3   # deviation 2: reported apart
+    python redteam/run.py run R1 --launch 2   # deviation 7: the edits of the second launch, apart
 
 A response is stored by the author as the model returned it, in `redteam/responses`, in a file
 whose name starts with its part and conversation: `R1-1` to `R1-6`, `R2`, `R3`. This script writes
@@ -98,6 +99,17 @@ def read_responses(folder: Path = RESPONSES, unreadable: list | None = None) -> 
     if len(ids) != len(set(ids)):
         raise ValueError("two response files give the same part and conversation")
     return out
+
+
+# Deviation 7: the second launch is kept apart; the edits of its part R1 are run through both
+# detectors and reported apart, never with those of the third launch, under identifiers of their own.
+LAUNCHES = {2: HERE / "launch-2" / "responses"}
+
+
+def read_launch(launch: int, folder: Path | None = None) -> list[dict]:
+    folder = LAUNCHES[launch] if folder is None else folder
+    return [dict(e, edit_id=f"L{launch}-{e['edit_id']}", **{"class": f"R1-L{launch}"})
+            for e in read_responses(folder) if e["part"] == "R1"]
 
 
 # --------------------------------------------------------------------------- placing an edit
@@ -223,7 +235,7 @@ def missing_rulings(edit_ids: list[str], rulings: dict[str, bool]) -> list[str]:
 
 
 def result_row(edit: dict, *, file: str, reason: str, stratum: str, commit: str, case_hash: str) -> dict:
-    return {"mutant_id": edit["edit_id"], "source": "red team", "class": edit["part"],
+    return {"mutant_id": edit["edit_id"], "source": "red team", "class": edit.get("class", edit["part"]),
             "expected": "block", "seed": "", "target": f"{file}:{edit.get('line', '')}",
             "old": edit.get("old", ""), "new": edit.get("new", ""), "stratum": stratum,
             "code_commit": commit, "case_hash": case_hash, "status": "invalid" if reason else "ok",
@@ -265,7 +277,10 @@ def cmd_run(args) -> None:
     count = json.loads(runner.COUNT_CONTROL.read_text(encoding="utf-8"))
     if not (control["control_passes"] and count["control_passes"]):
         raise SystemExit("a control does not pass: no edit runs")
-    edits = [e for e in read_responses() if e["part"] == args.part]
+    if args.launch is not None and args.part != "R1":
+        raise SystemExit("only part R1 of a kept launch is run (deviation 7)")
+    edits = (read_launch(args.launch) if args.launch is not None
+             else [e for e in read_responses() if e["part"] == args.part])
     case = core.Case()
     strata = core.strata(case.places)
 
@@ -338,6 +353,8 @@ def main(argv=None) -> None:
     sub.add_parser("list").set_defaults(fn=cmd_list)
     r = sub.add_parser("run")
     r.add_argument("part", choices=PARTS)
+    r.add_argument("--launch", type=int, choices=sorted(LAUNCHES), default=None,
+                   help="a launch kept apart (deviation 7): its R1 edits, reported apart")
     r.set_defaults(fn=cmd_run)
     args = ap.parse_args(argv)
     args.fn(args)

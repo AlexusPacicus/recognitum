@@ -349,3 +349,16 @@ def test_red_team_edits_stay_out_of_the_q2_tables_and_have_their_own_section():
 
 def test_without_red_team_lines_q3_says_so():
     assert "No edit of the red team is in the results file." in an.render(q2_rows(), [])
+
+
+def test_the_second_launch_is_reported_apart_from_r1():
+    rows = q2_rows() + [red("R1-1-01", "R1", "repeated", "", "check"),
+                        red("L2-R1-3-01", "R1-L2", "repeated", "", "check"),
+                        dict(red("L2-R1-3-02", "R1-L2", "", status="invalid", valid=False),
+                             invalid_reason="on a heading")]
+    text = an.render(rows, [], None, (), [], {})
+    q3_part = text.split("## Q3.")[1].split("## Collisions")[0]
+    assert "| R1 | all | 1 | 0 | 0/1 |" in q3_part
+    assert "| R1, second launch, apart | all | 1 | 1 | 0/1 |" in q3_part
+    assert "deviation 7" in q3_part
+    assert "| L2-R1-3-02 | R1, second launch, apart | on a heading |" in q3_part

@@ -208,3 +208,17 @@ def test_a_response_with_no_list_gives_no_edit_and_is_named_not_repaired(tmp_pat
     edits = rt.read_responses(tmp_path, unreadable)
     assert [e["edit_id"] for e in edits] == ["R1-1-01"]
     assert unreadable == ["R1-2-m-2026-11-15.txt", "R1-3-m-2026-11-15.txt"]
+
+
+def test_the_second_launch_is_read_apart_with_identifiers_of_its_own(tmp_path):
+    """Deviation 7: the five edits of R1-3 of the second launch are run through both detectors and
+    reported apart, never with those of the third launch, whose identifiers they would repeat."""
+    (tmp_path / "R1-3-m-2026-11-15.txt").write_text('[{"line": 1, "old": "a", "new": "b"}]', encoding="utf-8")
+    (tmp_path / "R1-4-m-2026-11-15.txt").write_text("One sentence, no list.", encoding="utf-8")
+    (tmp_path / "R2-1-m-2026-11-15.txt").write_text('[{"line": 2, "old": "c", "new": "d"}]', encoding="utf-8")
+    edits = rt.read_launch(2, tmp_path)
+    assert [e["edit_id"] for e in edits] == ["L2-R1-3-01"]   # only part R1 of it is run
+    assert edits[0]["part"] == "R1" and edits[0]["class"] == "R1-L2"
+    row = rt.result_row(edits[0], file="paper/m.md", reason="", stratum="repeated", commit="c", case_hash="h")
+    assert row["class"] == "R1-L2" and row["mutant_id"] == "L2-R1-3-01"
+    assert rt.LAUNCHES[2] == rt.HERE / "launch-2" / "responses"

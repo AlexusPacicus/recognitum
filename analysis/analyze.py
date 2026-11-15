@@ -31,15 +31,16 @@ DETECTORS = ("verifier", "count")
 NAMES = {"verifier": "Verifier", "count": "Count check", "either": "At least one of the two"}
 TIMES = ("verifier_s", "count_s")
 
-CLASS_ORDER = ["M1", "M2", "M2all", "M4", "M5", "M6", "M7", "B1", "R1", "R2", "R3"]
-CLASS_LABEL = {"M2all": "M2, every figure place", "R3": "R3, not pre-registered"}
+CLASS_ORDER = ["M1", "M2", "M2all", "M4", "M5", "M6", "M7", "B1", "R1", "R2", "R3", "R1-L2"]
+CLASS_LABEL = {"M2all": "M2, every figure place", "R3": "R3, not pre-registered",
+               "R1-L2": "R1, second launch, apart"}
 STRATUM_ORDER = ["all", "once", "repeated", "same section", "different sections", "checked",
                  "construction", "remove", "read, print now false", "read, print still true", "unread",
                  "no figure place"]
 # Classes whose targets were drawn as a sample: the Wilson interval describes that draw.
 SAMPLED = {"M1", "M2", "M4", "M6", "B1"}
 # Classes with a line for the whole class next to the subgroups that were recorded, not allocated.
-WHOLE = {"M1", "M7", "R1", "R3"}
+WHOLE = {"M1", "M7", "R1", "R3", "R1-L2"}
 # Results of the count check that follow from its design (protocol, section 2).
 COUNT_BY_DESIGN = {"M1", "M2", "M2all", "M4", "M5", "M6", "B1"}
 M6_IN_RATE = "read, print now false"
@@ -366,7 +367,10 @@ def _q3(red: list[dict], edits, rulings) -> list[str]:
     out = ["Parts R1 and R3 by the stratum of the figure place the edit touches. The edits are not a "
            "sample of anything, so no interval is given. Part R3 is deviation 2: it is reported apart "
            "and was not pre-registered.\n"]
-    table = [g for g in q2([r for r in red if r["class"] in ("R1", "R3")]) if g["stratum"]]
+    if any(r["class"] == "R1-L2" for r in red):
+        out.append("The edits of the second launch are deviation 7: in that launch the model had a shell and "
+                   "may have read the protocol. They are reported apart and never added to those of part R1.\n")
+    table = [g for g in q2([r for r in red if r["class"] in ("R1", "R3", "R1-L2")]) if g["stratum"]]
     for det in (*DETECTORS, "either"):
         out.append(f"### {NAMES[det]}\n")
         out.append(_q2_table(table, det))
