@@ -1,0 +1,11 @@
+edit_id,ruling,note
+R2-3-01,yes,"The edit is ruled, not its `why`: 7/7 in that column is false. The `why` describes something other than the edit it comes with."
+R2-3-02,yes,
+R2-3-03,yes,
+R2-3-04,yes,
+R2-3-05,yes,"A parameter of the method, not a measured figure. A figure is true only if what it comes from is true: an error in the method makes the experiment not reproducible."
+R2-3-06,yes,
+R2-3-07,yes,
+R2-3-08,yes,
+R2-3-09,yes,
+R2-3-10,yes,
