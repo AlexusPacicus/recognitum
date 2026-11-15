@@ -27,6 +27,7 @@ import argparse
 import datetime as dt
 import hashlib
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -64,11 +65,14 @@ def _now() -> str:
     return dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
 
 
-def command(client: str, model: str, conversation_id: str, prompt: str, names: list[str]) -> list[str]:
+def command(client: str, model: str, conversation_id: str, prompt: str, names: list[str],
+            folder: str = "<folder>") -> list[str]:
     # The message comes before the options: `-f` takes a list and would take the message too.
-    cmd = [client, "run", prompt, "--pure", "-m", model, "--title", conversation_id]
+    # The folder is named in full: the client does not resolve an attached file against the
+    # directory it is started in (the first launch ended on `File not found` for a bare name).
+    cmd = [client, "run", prompt, "--pure", "-m", model, "--title", conversation_id, "--dir", folder]
     for n in names:
-        cmd += ["-f", n]
+        cmd += ["-f", f"{folder}/{n}"]
     return cmd
 
 
@@ -83,7 +87,8 @@ def _one(conv: dict, *, client, model, date, files, prompts, responses, log, ver
         before = {Path(f).name: _sha((folder / Path(f).name).read_bytes()) for f in files}
         started = _now()
         try:
-            p = subprocess.run(command(client, model, conv["id"], prompt, sorted(before)), cwd=folder,
+            p = subprocess.run(command(client, model, conv["id"], prompt, sorted(before), str(folder)),
+                               cwd=folder, env=dict(os.environ, PWD=str(folder)),
                                stdin=subprocess.DEVNULL, capture_output=True, timeout=timeout)
             out, err, code = p.stdout, p.stderr, p.returncode
         except subprocess.TimeoutExpired as exc:

@@ -16,6 +16,14 @@ if "--version" in sys.argv:
     raise SystemExit(0)
 print("cwd-files:" + ",".join(sorted(os.listdir("."))))
 print("argv:" + "|".join(a for a in sys.argv[1:] if len(a) < 80))
+attached = [sys.argv[k + 1] for k, a in enumerate(sys.argv) if a == "-f"]
+here = os.path.realpath(os.getcwd())
+print("attached-absolute-in-folder:" + str(len(attached) == 2 and all(
+    os.path.isabs(a) and os.path.isfile(a) and os.path.dirname(os.path.realpath(a)) == here
+    for a in attached)))
+print("pwd-is-folder:" + str(os.path.realpath(os.environ.get("PWD", "")) == here))
+print("dir-is-folder:" + str(os.path.realpath(sys.argv[sys.argv.index("--dir") + 1]) == here
+                             if "--dir" in sys.argv else False))
 print('[{{"line": 1, "old": "a", "new": "b", "why": "w"}}]')
 {extra}
 """
@@ -64,6 +72,10 @@ def test_a_conversation_sees_two_files_and_its_output_is_stored_as_returned(tmp_
     assert out[0] == "R1-1-prov_some-model-2026-11-15.txt" and len(out) == 7
     text = (setup["responses"] / out[0]).read_text(encoding="utf-8")
     assert "cwd-files:paper.md,verify.py" in text
+    # The client does not resolve an attached file against the folder it is started in: the first
+    # launch failed on `File not found` for a relative name. Every way of naming the folder is used.
+    assert "attached-absolute-in-folder:True" in text
+    assert "pwd-is-folder:True" in text and "dir-is-folder:True" in text
     assert "--pure" in text and "prov/some-model" in text and "--auto" not in text
     assert rt.parse_response(text) == [{"line": 1, "old": "a", "new": "b", "why": "w"}]
     assert len(rt.read_responses(setup["responses"])) == 7
