@@ -21,6 +21,10 @@ cell by cell, it looks each published string up anywhere in the manuscript. The 
 printed figure is needed. That detector, the matrix, is specified in `design/matrix` with its
 predictions, written before any run; it was not built during the sprint.
 
+Recognitum does not propose the count check as a solution. It uses a low-cost check as an
+experimental baseline, to characterise the limits of presence-based verification and to justify a
+matrix-based architecture for numerical traceability.
+
 ## Results, in short
 
 Every count is from [`results/tables.md`](results/tables.md), which `analysis/analyze.py` writes
