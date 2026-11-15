@@ -435,7 +435,12 @@ def render(first: list[dict], again: list[dict], case_q1: dict | None = None, pu
                            "Verifier differs", "Count check differs", "Another column differs",
                            "Columns that differ"],
                           [[_label(r["class"]), r["repeated"], r["same"], r["verifier_differs"],
-                            r["count_differs"], r["other_differs"], ", ".join(r["columns"]) or "—"] for r in rep]))
+                            r["count_differs"], r["other_differs"], ", ".join(r["columns"]) or "—"]
+                           for r in rep]
+                          + [["every class"] + [sum(r[k] for r in rep) for k in
+                                                ("repeated", "same", "verifier_differs", "count_differs",
+                                                 "other_differs")]
+                             + [", ".join(sorted({c for r in rep for c in r["columns"]})) or "—"]]))
     else:
         out.append("No repeated line in the results file.\n")
 
