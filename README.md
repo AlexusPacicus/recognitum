@@ -28,7 +28,9 @@ matrix-based architecture for numerical traceability.
 ## Results, in short
 
 Every count is from [`results/tables.md`](results/tables.md), which `analysis/analyze.py` writes
-from `results/mutants.csv`. The report draft is in [`report/`](report).
+from `results/mutants.csv`. The report, as submitted to the sprint on 16 November 2026, is
+[`report/recognitum-apart-sprint.pdf`](report/recognitum-apart-sprint.pdf): *Recognitum: what escapes
+a claims verifier when results become prose*.
 
 - **Exposure (Q1).** The manuscript has 419 figure places. 114 hold a string printed once; 305 hold
   one of 79 strings printed more than once.
@@ -55,7 +57,7 @@ from `results/mutants.csv`. The report draft is in [`report/`](report).
 | `redteam/` | The prompts, the script that generated the responses, the responses as returned, the author's rulings on part R2, and the script that applies the edits. |
 | `analysis/` | The script that writes every table, and the check that each numeral of the report is printed in a source. |
 | `results/` | The control, the draws, one line per mutant or edit, and the tables. |
-| `report/` | Drafts of the method, results and related work, for the official template. |
+| `report/` | The report as submitted to the sprint (PDF), and the drafts of its method, results and related work. |
 | `design/matrix/` | The matrix: specified, with its predictions; not built. |
 | `BLUEPRINT.md` | The plan the sprint started from. What was run is the protocol; its change log says what changed. |
 
@@ -112,8 +114,10 @@ The last command prints nothing when the two trees are the same.
 ## Use of AI
 
 - **An AI agent (Claude)** drafted the plan with the author, wrote the code and its tests, and
-  drafted the method, results and related work of the report.
+  drafted the methods, results, related work, discussion and limitations appendix of the report,
+  and edited and translated its abstract and conclusion.
 - **The red team's edits** were written by another model, `minimax-m3.1-flash-free`, through the
   agent client `opencode`, one conversation per call of `redteam/generate.py`.
 - **The author** decided the protocol and every deviation, ruled on each edit of part R2 before
-  either detector ran, approves every number and writes the rest of the report.
+  either detector ran, approved every number, and wrote the introduction, the abstract and the
+  conclusion of the report.
