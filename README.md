@@ -21,6 +21,14 @@ cell by cell, it looks each published string up anywhere in the manuscript. The 
 printed figure is needed. That detector, the matrix, is specified in `design/matrix` with its
 predictions, written before any run; it was not built during the sprint.
 
+The reading behind it is about language. The elements of a computational study are related along
+as many dimensions as it takes to tell one result from another: a value, of a metric, from a run,
+under given parameters. A paper passes them through a sequential channel. Written down, a figure
+keeps its value and loses those relations, which only the prose around it carries, so a check that
+finds the value somewhere in the text cannot tell whether it still stands for the right result. In
+this case every escape we measured passed through the text. The matrix is an attempt to formalise
+that relation, starting from each printed figure.
+
 Recognitum does not propose the count check as a solution. It uses a low-cost check as an
 experimental baseline, to characterise the limits of presence-based verification and to justify a
 matrix-based architecture for numerical traceability.
